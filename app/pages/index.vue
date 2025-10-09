@@ -7,7 +7,7 @@
             loop
             muted
         ></video>
-        <progress-bar class="absolute w-xs left-4 top-10" />
+        <progress-bar class="absolute left-4 top-10" />
     </div>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="">
         <nav class="w-full">
             <ul class="flex justify-around items-center">
                 <li v-for="(btn, index) in navBtns" :key="index">

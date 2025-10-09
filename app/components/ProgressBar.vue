@@ -1,7 +1,7 @@
 <template>
     <div>
-        <div><ui-level-circle class="absolute -top-4 -left-2 z-10 " /></div>
-        <UProgress v-model="value" />
+        <div><ui-level-circle class="absolute -top-4 -left-2 z-10" /></div>
+        <UProgress v-model="value" class="w-3xs" />
     </div>
 </template>
 

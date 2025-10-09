@@ -1,6 +1,8 @@
 <template>
     <div>
-        <div class="glass-container absolute w-full bottom-10"><navbar /></div>
+        <div class="glass-container absolute w-full bottom-10">
+            <navbar />
+        </div>
         <slot />
     </div>
 </template>
