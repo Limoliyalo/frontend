@@ -24,13 +24,13 @@
 
         <div class="mt-4">
             <div v-if="activeTab === 'water'">
-                <UserinfoWaterInfo />
+                <UserinfoUserWaterInfo />
             </div>
             <div v-else-if="activeTab === 'timer'">
-                <UserinfoTimerInfo />
+                <UserinfoUserTimerInfo />
             </div>
             <div v-else-if="activeTab === 'food'">
-                <UserinfoFoodInfo />
+                <UserinfoUserFoodInfo />
             </div>
         </div>
     </div>

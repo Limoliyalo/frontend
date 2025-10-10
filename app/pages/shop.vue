@@ -1,100 +1,52 @@
 <template>
-    <div class="h-screen flex justify-center items-center">
-        <Swiper
-            :effect="'cards'"
-            :grabCursor="true"
-            :modules="modules"
-            class="mySwiper"
-        >
-            <SwiperSlide>Slide 1</SwiperSlide>
-            <SwiperSlide>Slide 2</SwiperSlide>
-            <SwiperSlide>Slide 3</SwiperSlide>
-            <SwiperSlide>Slide 4</SwiperSlide>
-            <SwiperSlide>Slide 5</SwiperSlide>
-            <SwiperSlide>Slide 6</SwiperSlide>
-            <SwiperSlide>Slide 7</SwiperSlide>
-            <SwiperSlide>Slide 8</SwiperSlide>
-            <SwiperSlide>Slide 9</SwiperSlide>
-        </Swiper>
+    <div class="flex flex-col gap-1.5 mt-4 mx-4">
+        <div class="flex gap-1.5 items-center justify-start">
+            <ShopSearch @search="handleSearch" />
+            <ShopFavourite />
+        </div>
+        <div class="glass-container overflow-hidden max-h-110 w-full mt-4 p-4">
+            <UTabs :items="tabItems" class="w-full">
+                <template #items>
+                    <ShopItems :search-query="searchQuery"/>
+                </template>
+                <template #environments>
+                    <ShopEnvironments />
+                </template>
+            </UTabs>
+        </div>
     </div>
 </template>
 
-<script lang="ts">
-import { Swiper, SwiperSlide } from 'swiper/vue'
-
-// Import Swiper styles
-import 'swiper/css'
-import 'swiper/css/effect-cards'
-
-// import required modules
-import { EffectCards } from 'swiper/modules'
-
-export default {
-    components: {
-        Swiper,
-        SwiperSlide,
+<script lang="ts" setup>
+import { ref } from 'vue'
+const tabItems = [
+    {
+        slot: 'items',
+        label: 'Предметы',
     },
-    setup() {
-        return {
-            modules: [EffectCards],
-        }
+    {
+        slot: 'environments',
+        label: 'Окружения',
     },
+]
+
+const searchQuery = ref('')
+
+const handleSearch = (query: string) => {
+    searchQuery.value = query
 }
 </script>
 
 <style>
-.swiper {
-    width: 240px;
-    height: 320px;
+.glass-container-2 {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
 }
 
-.swiper-slide {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 18px;
-    font-size: 22px;
-    font-weight: bold;
-    color: #fff;
-}
-
-.swiper-slide:nth-child(1n) {
-    background-color: rgb(206, 17, 17);
-}
-
-.swiper-slide:nth-child(2n) {
-    background-color: rgb(0, 140, 255);
-}
-
-.swiper-slide:nth-child(3n) {
-    background-color: rgb(10, 184, 111);
-}
-
-.swiper-slide:nth-child(4n) {
-    background-color: rgb(211, 122, 7);
-}
-
-.swiper-slide:nth-child(5n) {
-    background-color: rgb(118, 163, 12);
-}
-
-.swiper-slide:nth-child(6n) {
-    background-color: rgb(180, 10, 47);
-}
-
-.swiper-slide:nth-child(7n) {
-    background-color: rgb(35, 99, 19);
-}
-
-.swiper-slide:nth-child(8n) {
-    background-color: rgb(0, 68, 255);
-}
-
-.swiper-slide:nth-child(9n) {
-    background-color: rgb(218, 12, 218);
-}
-
-.swiper-slide:nth-child(10n) {
-    background-color: rgb(54, 94, 77);
+.glass-container-2:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
 }
 </style>

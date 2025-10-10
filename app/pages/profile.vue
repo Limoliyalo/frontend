@@ -1,7 +1,7 @@
 <template>
     <div class="p-4">
-        <UserinfoUnionProgress />
-        <UserinfoPartProgress />
+        <UserinfoUserDayProgress />
+        <UserinfoUserActivities />
     </div>
 </template>
 
