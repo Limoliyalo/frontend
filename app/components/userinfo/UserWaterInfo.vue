@@ -1,55 +1,68 @@
 <template>
     <div class="w-full px-4 flex flex-col items-center">
         <!-- Water consumption section -->
-        <div class="w-full flex justify-center space-x-8 mt-6 items-center">
-            <div class="flex flex-col items-center w-32">
-                <div class="glass-visual">
-                    <div
-                        class="water"
-                        :style="{ height: waterLevel + '%' }"
-                    ></div>
+        <div class="glass-container w-full">
+            <div class="w-full flex justify-center space-x-8 mt-6 items-center">
+                <div class="flex flex-col items-center w-32">
+                    <div class="glass-visual">
+                        <div
+                            class="water"
+                            :style="{ height: waterLevel + '%' }"
+                        ></div>
+                    </div>
+                    <p class="mt-2 text-lg">Выпито: {{ waterLevel }}%</p>
                 </div>
-                <p class="mt-2 text-lg">Выпито: {{ waterLevel }}%</p>
+
+                <div class="flex flex-col space-y-3">
+                    <button
+                        @click="waterLevel = Math.min(100, waterLevel + 10)"
+                        class="p-2 rounded-full bg-blue-500 text-white w-12 h-12 flex items-center justify-center text-xl"
+                    >
+                        +
+                    </button>
+                    <button
+                        @click="waterLevel = Math.max(0, waterLevel - 10)"
+                        class="p-2 rounded-full bg-blue-500 text-white w-12 h-12 flex items-center justify-center text-xl"
+                    >
+                        -
+                    </button>
+                </div>
             </div>
 
-            <div class="flex flex-col space-y-3">
-                <button
-                    @click="waterLevel = Math.min(100, waterLevel + 10)"
-                    class="p-2 rounded-full bg-blue-500 text-white w-12 h-12 flex items-center justify-center text-xl"
-                >
-                    +
-                </button>
-                <button
-                    @click="waterLevel = Math.max(0, waterLevel - 10)"
-                    class="p-2 rounded-full bg-blue-500 text-white w-12 h-12 flex items-center justify-center text-xl"
-                >
-                    -
-                </button>
+            <div class="mt-6">
+                <p class="text-lg text-center">
+                    {{ adviceText }}
+                </p>
             </div>
-        </div>
-
-        <div class="mt-6">
-            <p class="text-lg text-center">
-                {{ adviceText }}
-            </p>
         </div>
 
         <!-- Weekly statistics section -->
-        <div class="w-full mt-8">
+        <div class="w-full mt-8 glass-container">
             <h3 class="text-xl text-center mb-4">Статистика за неделю</h3>
-            <div class="flex">
+            <div
+                class="relative w-full h-40 rounded-lg border border-white/20 bg-black/20 p-4 pl-12"
+            >
                 <!-- Y-Axis Labels -->
                 <div
-                    class="flex h-32 flex-col justify-between pr-2 text-sm text-white/50"
+                    class="absolute left-2 top-4 bottom-12 flex flex-col justify-between text-sm text-white/50"
                 >
                     <span>100</span>
                     <span>50</span>
+                </div>
+                <div class="absolute left-2 bottom-4 text-sm text-white/50">
                     <span>0</span>
                 </div>
-                <!-- Chart -->
+
+                <!-- Grid Lines -->
                 <div
-                    class="flex h-32 w-full items-end justify-around rounded-lg border border-white/20 bg-black/20 px-4"
-                >
+                    class="absolute left-12 right-4 top-4 border-t border-dashed border-white/20"
+                ></div>
+                <div
+                    class="absolute left-12 right-4 top-1/2 -translate-y-1/2 border-t border-dashed border-white/20"
+                ></div>
+
+                <!-- Bars -->
+                <div class="relative z-10 flex h-full items-end justify-around">
                     <div
                         v-for="stat in weeklyStats"
                         :key="stat.day"
@@ -63,7 +76,7 @@
                                 :style="{ height: stat.percentage + '%' }"
                             ></div>
                         </div>
-                        <p class="mt-2 text-sm">{{ stat.day }}</p>
+                        <p class="absolute -bottom-6 text-sm">{{ stat.day }}</p>
                     </div>
                 </div>
             </div>
