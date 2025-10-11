@@ -2,12 +2,15 @@
     <div class="flex flex-col gap-1.5 mt-4 mx-4">
         <div class="flex gap-1.5 items-center justify-start">
             <ShopSearch @search="handleSearch" />
-            <ShopFavourite />
+            <ShopFavourite @click="isFavourite = !isFavourite" />
         </div>
         <div class="glass-container overflow-hidden max-h-110 w-full mt-4 p-4">
             <UTabs :items="tabItems" class="w-full">
                 <template #items>
-                    <ShopItems :search-query="searchQuery"/>
+                    <ShopItems
+                        :search-query="searchQuery"
+                        :is-favourite="isFavourite"
+                    />
                 </template>
                 <template #environments>
                     <ShopEnvironments />
@@ -29,6 +32,8 @@ const tabItems = [
         label: 'Окружения',
     },
 ]
+
+const isFavourite = ref(false)
 
 const searchQuery = ref('')
 

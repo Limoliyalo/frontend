@@ -5,11 +5,28 @@ export default defineNuxtConfig({
     css: ['~/assets/css/main.css'],
 
     modules: [
-      '@nuxt/eslint',
-      '@nuxt/fonts',
-      '@nuxt/icon',
-      '@nuxt/image',
-      '@nuxt/ui',
-      'nuxt-swiper',
+        '@nuxt/eslint',
+        '@nuxt/fonts',
+        '@nuxt/icon',
+        '@nuxt/image',
+        '@nuxt/ui',
+        'nuxt-swiper',
     ],
+
+    app: {
+        head: {
+            title: 'Healthity',
+            meta: [
+                {
+                    name: 'description',
+                    content:
+                        'Соревнуйся с здрузьями в ЗОЖ и следи за своим здоровьем!',
+                },
+            ],
+        },
+    },
+    nitro: {
+        preset: 'vercel',
+    },
+    ssr: true,
 })
