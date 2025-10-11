@@ -1,64 +1,35 @@
-<!-- Компонент для просмотра конкретного прогресса пользователя (вода еда и тд) -->
 <template>
-    <div
-        class="glass-container max-h-[336px] [@media(max-height:595px)]:max-h-65 overflow-y-auto mt-8 p-4"
-    >
-        <div class="flex justify-center space-x-4 mb-4">
-            <button
-                @click="activeTab = 'water'"
-                :class="['pill', { active: activeTab === 'water' }]"
-            >
-                Вода
-            </button>
-            <button
-                @click="activeTab = 'timer'"
-                :class="['pill', { active: activeTab === 'timer' }]"
-            >
-                Таймер
-            </button>
-            <button
-                @click="activeTab = 'food'"
-                :class="['pill', { active: activeTab === 'food' }]"
-            >
-                Еда
-            </button>
-        </div>
-
-        <div class="mt-4">
-            <div v-if="activeTab === 'water'">
-                <UserinfoUserWaterInfo />
-            </div>
-            <div v-else-if="activeTab === 'timer'">
-                <UserinfoUserTimerInfo />
-            </div>
-            <div v-else-if="activeTab === 'food'">
-                <UserinfoUserFoodInfo />
-            </div>
+    <div class="glass-container overflow-y-auto mt-8 p-4">
+        <div class="grid grid-cols-1 gap-4">
+            <userinfo-user-activity
+                v-for="(activity, index) in activities"
+                :key="index"
+                :linkto="activity.linkto"
+                :iconName="activity.iconName"
+                :text="activity.text"
+            />
         </div>
     </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-const activeTab = ref('water')
+const activities = [
+    {
+        linkto: '/aboutWater',
+        iconName: 'hugeicons:water-energy',
+        text: 'Сколько вы пили за день',
+    },
+    {
+        linkto: '/aboutBack',
+        iconName: 'hugeicons:time-quarter-pass',
+        text: 'Следить за осанкой',
+    },
+    {
+        linkto: '/aboutFood',
+        iconName: 'hugeicons:organic-food',
+        text: 'Сколько вы ели за день',
+    },
+]
 </script>
 
-<style scoped>
-.pill {
-    padding: 0.5rem 1rem;
-    border-radius: 9999px; /* rounded-full */
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-    transition: background-color 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.pill:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-.pill.active {
-    background-color: rgba(255, 255, 255, 0.3);
-    font-weight: 600; /* semibold */
-}
-</style>
+<style scoped></style>

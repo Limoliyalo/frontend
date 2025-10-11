@@ -35,10 +35,39 @@
             </p>
         </div>
 
-        <div
-            class="mt-6 text-center text-white/70 p-4 border border-white/20 rounded-lg"
-        >
-            <p>тут будет статистика за неделю</p>
+        <!-- Weekly statistics section -->
+        <div class="w-full mt-8">
+            <h3 class="text-xl text-center mb-4">Статистика за неделю</h3>
+            <div class="flex">
+                <!-- Y-Axis Labels -->
+                <div
+                    class="flex h-32 flex-col justify-between pr-2 text-sm text-white/50"
+                >
+                    <span>100</span>
+                    <span>50</span>
+                    <span>0</span>
+                </div>
+                <!-- Chart -->
+                <div
+                    class="flex h-32 w-full items-end justify-around rounded-lg border border-white/20 bg-black/20 px-4"
+                >
+                    <div
+                        v-for="stat in weeklyStats"
+                        :key="stat.day"
+                        class="flex flex-col items-center text-center w-10"
+                    >
+                        <div
+                            class="flex h-full w-full items-end justify-center"
+                        >
+                            <div
+                                class="w-4 rounded-t-md bg-yellow-500"
+                                :style="{ height: stat.percentage + '%' }"
+                            ></div>
+                        </div>
+                        <p class="mt-2 text-sm">{{ stat.day }}</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -47,6 +76,16 @@
 import { ref, computed } from 'vue'
 
 const foodLevel = ref(50) // Start at 50%
+
+const weeklyStats = ref([
+    { day: 'Пн', percentage: 70 },
+    { day: 'Вт', percentage: 80 },
+    { day: 'Ср', percentage: 60 },
+    { day: 'Чт', percentage: 85 },
+    { day: 'Пт', percentage: 95 },
+    { day: 'Сб', percentage: 100 },
+    { day: 'Вс', percentage: 90 },
+])
 
 const adviceText = computed(() => {
     if (foodLevel.value < 50) {

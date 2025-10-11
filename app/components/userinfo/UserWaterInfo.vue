@@ -1,6 +1,7 @@
 <template>
     <div class="w-full px-4 flex flex-col items-center">
-        <div class="w-full flex justify-center space-x-8 mt-6">
+        <!-- Water consumption section -->
+        <div class="w-full flex justify-center space-x-8 mt-6 items-center">
             <div class="flex flex-col items-center w-32">
                 <div class="glass-visual">
                     <div
@@ -33,10 +34,39 @@
             </p>
         </div>
 
-        <div
-            class="mt-6 text-center text-white/70 p-4 border border-white/20 rounded-lg"
-        >
-            <p>тут будет статистика за неделю</p>
+        <!-- Weekly statistics section -->
+        <div class="w-full mt-8">
+            <h3 class="text-xl text-center mb-4">Статистика за неделю</h3>
+            <div class="flex">
+                <!-- Y-Axis Labels -->
+                <div
+                    class="flex h-32 flex-col justify-between pr-2 text-sm text-white/50"
+                >
+                    <span>100</span>
+                    <span>50</span>
+                    <span>0</span>
+                </div>
+                <!-- Chart -->
+                <div
+                    class="flex h-32 w-full items-end justify-around rounded-lg border border-white/20 bg-black/20 px-4"
+                >
+                    <div
+                        v-for="stat in weeklyStats"
+                        :key="stat.day"
+                        class="flex flex-col items-center text-center w-10"
+                    >
+                        <div
+                            class="flex h-full w-full items-end justify-center"
+                        >
+                            <div
+                                class="w-4 rounded-t-md bg-blue-500"
+                                :style="{ height: stat.percentage + '%' }"
+                            ></div>
+                        </div>
+                        <p class="mt-2 text-sm">{{ stat.day }}</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -45,6 +75,16 @@
 import { ref, computed } from 'vue'
 
 const waterLevel = ref(50) // Start at 50%
+
+const weeklyStats = ref([
+    { day: 'Пн', percentage: 80 },
+    { day: 'Вт', percentage: 60 },
+    { day: 'Ср', percentage: 90 },
+    { day: 'Чт', percentage: 75 },
+    { day: 'Пт', percentage: 100 },
+    { day: 'Сб', percentage: 40 },
+    { day: 'Вс', percentage: 70 },
+])
 
 const adviceText = computed(() => {
     if (waterLevel.value < 50) {

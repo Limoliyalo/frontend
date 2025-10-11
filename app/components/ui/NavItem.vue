@@ -1,5 +1,5 @@
 <template>
-    <NuxtLink :to="navBtn.linkto">
+    <NuxtLink :to="props.navBtn.linkto">
         <!-- TODO Активная кнопка должна быть прожата пока пользователь не покинет страничку -->
         <div
             class="rounded-full w-12 h-12 shadow shadow-black flex justify-center items-center text-center active:shadow-inner"
