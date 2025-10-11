@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full px-4 flex flex-col items-center">
+    <div class="w-full p-4 flex flex-col items-center">
         <div class="w-full glass-container">
             <div class="w-full flex justify-center space-x-8 mt-6">
                 <!-- Left side: Food visual and percentage -->
@@ -41,43 +41,48 @@
         <div class="w-full mt-8 glass-container">
             <h3 class="text-xl text-center mb-4">Статистика за неделю</h3>
             <div
-                class="relative w-full h-40 rounded-lg border border-white/20 bg-black/20 p-4 pl-12"
+                class="relative w-full h-32 rounded-lg border border-white/20 bg-black/20 p-4"
             >
-                <!-- Y-Axis Labels -->
-                <div
-                    class="absolute left-2 top-4 bottom-12 flex flex-col justify-between text-sm text-white/50"
-                >
-                    <span>100</span>
-                    <span>50</span>
+                <!-- Grid Lines & Y-Axis Labels -->
+                <div class="absolute inset-0 p-4 pointer-events-none">
+                    <div class="relative w-full h-full">
+                        <!-- 100% Line & Label -->
+                        <div class="absolute top-0 w-full flex items-center">
+                            <span class="text-xs text-white/50 pr-2">100</span>
+                            <div
+                                class="flex-grow border-t border-dashed border-white/20"
+                            ></div>
+                        </div>
+                        <!-- 50% Line & Label -->
+                        <div
+                            class="absolute top-1/2 -translate-y-1/2 w-full flex items-center"
+                        >
+                            <span class="text-xs text-white/50 pr-2">50</span>
+                            <div
+                                class="flex-grow border-t border-dashed border-white/20"
+                            ></div>
+                        </div>
+                        <!-- 0% Label -->
+                        <div class="absolute bottom-0 w-full flex items-center">
+                            <span class="text-xs text-white/50 pr-2">0</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="absolute left-2 bottom-4 text-sm text-white/50">
-                    <span>0</span>
-                </div>
-
-                <!-- Grid Lines -->
-                <div
-                    class="absolute left-12 right-4 top-4 border-t border-dashed border-white/20"
-                ></div>
-                <div
-                    class="absolute left-12 right-4 top-1/2 -translate-y-1/2 border-t border-dashed border-white/20"
-                ></div>
 
                 <!-- Bars -->
                 <div class="relative z-10 flex h-full items-end justify-around">
                     <div
                         v-for="stat in weeklyStats"
                         :key="stat.day"
-                        class="flex flex-col items-center text-center w-10"
+                        class="relative flex h-full w-10 flex-col items-center justify-end"
                     >
                         <div
-                            class="flex h-full w-full items-end justify-center"
-                        >
-                            <div
-                                class="w-4 rounded-t-md bg-yellow-500"
-                                :style="{ height: stat.percentage + '%' }"
-                            ></div>
-                        </div>
-                        <p class="absolute -bottom-6 text-sm">{{ stat.day }}</p>
+                            class="w-4 rounded-t-md bg-yellow-500"
+                            :style="{ height: stat.percentage + '%' }"
+                        ></div>
+                        <p class="absolute -bottom-5 text-sm text-white/80">
+                            {{ stat.day }}
+                        </p>
                     </div>
                 </div>
             </div>
