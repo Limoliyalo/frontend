@@ -1,6 +1,6 @@
 <!-- Компонент для общего прогресса пользователя -->
 <template>
-    <div class="glass-container h-32 flex justify-start items-center">
+    <div class="glass-container h-22 flex justify-start items-center">
         <div class="h-full w-full flex justify-around items-center">
             <div class="progress-imitation"></div>
             <div class="text-center text-sm w-30">

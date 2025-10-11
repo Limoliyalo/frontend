@@ -1,10 +1,8 @@
 <template>
-    <div>
-        <div class="glass-container absolute w-full bottom-10">
-            <navbar />
-        </div>
-        <slot />
+    <div class="glass-container absolute w-full bottom-4 z-10000">
+        <navbar />
     </div>
+    <slot />
 </template>
 
 <script lang="ts" setup></script>

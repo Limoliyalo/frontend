@@ -1,13 +1,11 @@
 <template>
-    <div class="">
-        <nav class="w-full">
-            <ul class="flex justify-around items-center">
-                <li v-for="(btn, index) in navBtns" :key="index">
-                    <ui-nav-item :nav-btn="btn" />
-                </li>
-            </ul>
-        </nav>
-    </div>
+    <nav class="w-full">
+        <ul class="flex justify-around items-center">
+            <li v-for="(btn, index) in navBtns" :key="index">
+                <ui-nav-item :nav-btn="btn" />
+            </li>
+        </ul>
+    </nav>
 </template>
 
 <script lang="ts" setup>
