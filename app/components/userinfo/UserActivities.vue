@@ -1,6 +1,8 @@
 <!-- Компонент для просмотра конкретного прогресса пользователя (вода еда и тд) -->
 <template>
-    <div class="glass-container max-h-65 overflow-y-auto mt-8 p-4">
+    <div
+        class="glass-container max-h-[336px] [@media(max-height:595px)]:max-h-65 overflow-y-auto mt-8 p-4"
+    >
         <div class="flex justify-center space-x-4 mb-4">
             <button
                 @click="activeTab = 'water'"

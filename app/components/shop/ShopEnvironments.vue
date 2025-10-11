@@ -5,14 +5,21 @@
             :items="environments"
             orientation="vertical"
             :ui="{
-                container: 'h-[336px] w-64 flex items-center justify-center',
+                container:
+                    'h-[336px] w-64 flex items-center justify-center [@media(max-height:595px)]:h-[260px]',
             }"
         >
             <div
-                class="h-[320px] w-40 p-4 rounded-lg glass-container-2 flex flex-col items-center justify-center"
+                class="h-[320px] w-40 p-4 rounded-lg glass-container-2 flex flex-col items-center justify-center [@media(max-height:595px)]:h-[240px] [@media(max-height:595px)]:w-32 [@media(max-height:595px)]:p-2"
             >
-                <Icon :name="carouselItem.icon" class="w-32 h-32 mb-4" />
-                <span class="text-2xl font-bold">{{ carouselItem.name }}</span>
+                <Icon
+                    :name="carouselItem.icon"
+                    class="w-32 h-32 mb-4 [@media(max-height:595px)]:w-24 [@media(max-height:595px)]:h-24 [@media(max-height:595px)]:mb-2"
+                />
+                <span
+                    class="text-2xl font-bold [@media(max-height:595px)]:text-xl"
+                    >{{ carouselItem.name }}</span
+                >
             </div>
         </UCarousel>
     </div>
