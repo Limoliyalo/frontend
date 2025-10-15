@@ -11,8 +11,13 @@ export default defineNuxtConfig({
         '@nuxt/image',
         '@nuxt/ui',
         'nuxt-swiper',
+        '@pinia/nuxt',
     ],
-
+    runtimeConfig: {
+        public: {
+            apiBase: 'http://localhost:8000/api/v1',
+        },
+    },
     app: {
         head: {
             title: 'Healthity',
