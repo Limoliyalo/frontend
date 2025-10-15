@@ -44,7 +44,7 @@ const handleRegister = async () => {
     }
     // Вызываем действие 'register' для регистрации пользователя
     await authStore.regNewUser({
-        telegram_id: Number(tgId.value),
+        telegram_id: tgId.value,
         password: password.value,
     })
 }
