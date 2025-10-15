@@ -1,4 +1,11 @@
 <script setup lang="ts">
+// Объявляем глобальный тип, чтобы TypeScript знал о window.Telegram
+declare global {
+    interface Window {
+        Telegram?: any;
+    }
+}
+
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '~/store/auth.store'
 
@@ -13,11 +20,11 @@ const password = ref('')
 onMounted(() => {
     try {
         // В настоящем приложении Telegram Mini App ID пользователя получают так:
-        // tgId.value = window.Telegram.WebApp.initDataUnsafe.user.id;
+        tgId.value = window.Telegram.WebApp.initDataUnsafe.user.id;
 
         // ДЛЯ ТЕСТИРОВАНИЯ: мы временно подставим сюда тестовый ID.
         // Замените 123456789 на реальный ID для проверки работы логики.
-        tgId.value = 2
+        // tgId.value = 3
 
         if (!tgId.value) {
             console.error('Не удалось получить Telegram ID.')
