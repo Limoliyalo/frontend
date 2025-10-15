@@ -2,7 +2,7 @@
 // Объявляем глобальный тип, чтобы TypeScript знал о window.Telegram
 declare global {
     interface Window {
-        Telegram?: any;
+        Telegram?: any
     }
 }
 
@@ -20,7 +20,7 @@ const password = ref('')
 onMounted(() => {
     try {
         // В настоящем приложении Telegram Mini App ID пользователя получают так:
-        tgId.value = window.Telegram.WebApp.initDataUnsafe.user.id;
+        tgId.value = window.Telegram.WebApp.initDataUnsafe.user.id
 
         // ДЛЯ ТЕСТИРОВАНИЯ: мы временно подставим сюда тестовый ID.
         // Замените 123456789 на реальный ID для проверки работы логики.
@@ -44,7 +44,7 @@ const handleRegister = async () => {
     }
     // Вызываем действие 'register' для регистрации пользователя
     await authStore.regNewUser({
-        telegram_id: tgId.value,
+        telegram_id: Number(tgId.value),
         password: password.value,
     })
 }
