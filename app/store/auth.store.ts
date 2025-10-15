@@ -103,7 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
         refreshToken.value = null
         console.log('Токены очищены.')
         // Можно также перенаправить на главную или страницу входа
-        navigateTo('/login')
+        navigateTo('/register')
     }
 
       /**

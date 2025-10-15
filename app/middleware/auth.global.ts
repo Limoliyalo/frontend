@@ -10,7 +10,7 @@ export default defineNuxtRouteMiddleware(to => {
     const loggedIn = authStore.isAuthenticated
 
     // Страница входа является публичной
-    const isPublicRoute = to.path === '/login'
+    const isPublicRoute = to.path === '/register'
 
     // Если пользователь авторизован
     if (loggedIn) {
@@ -28,7 +28,7 @@ export default defineNuxtRouteMiddleware(to => {
                 'Global Middleware: Пользователь не авторизован. Перенаправление на /login'
             )
             // Перенаправляем на страницу входа
-            return navigateTo('/login', { replace: true })
+            return navigateTo('/register', { replace: true })
         }
     }
 })
