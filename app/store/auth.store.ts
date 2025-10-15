@@ -73,6 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
      * @param {NewUser} user - Данные нового пользователя.
      */
     async function regNewUser(user: NewUser) {
+        console.log('тут буду храниться типы юзеров в логи', user);
         const config = useRuntimeConfig()
         try {
             await $fetch('/users/register', {
@@ -106,37 +107,37 @@ export const useAuthStore = defineStore('auth', () => {
         navigateTo('/register')
     }
 
-      /**
-       * Обновляет access_token, используя refresh_token.
-       * Вызывается при инициализации приложения, если refresh_token существует.
-       */
-      async function refreshAccessToken() {
+    /**
+     * Обновляет access_token, используя refresh_token.
+     * Вызывается при инициализации приложения, если refresh_token существует.
+     */
+    async function refreshAccessToken() {
         if (!refreshToken.value) {
-          // Если нет refresh token, то и обновлять нечего
-          return
+            // Если нет refresh token, то и обновлять нечего
+            return
         }
-    
+
         console.log('Попытка обновить токен...')
         const config = useRuntimeConfig()
         try {
-          const tokens = await $fetch<Tokens>('/auth/refresh', {
-            method: 'POST',
-            body: { refresh_token: refreshToken.value },
-            baseURL: config.public.apiBase,
-          })
-    
-          setTokens(tokens)
-          console.log('Токены успешно обновлены.')
+            const tokens = await $fetch<Tokens>('/auth/refresh', {
+                method: 'POST',
+                body: { refresh_token: refreshToken.value },
+                baseURL: config.public.apiBase,
+            })
+
+            setTokens(tokens)
+            console.log('Токены успешно обновлены.')
         } catch (error) {
-          console.error('Ошибка обновления токена:', error)
-          // Если не удалось обновить токен (например, он истек),
-          // то выходим из системы, чтобы очистить невалидные данные.
-          logout()
+            console.error('Ошибка обновления токена:', error)
+            // Если не удалось обновить токен (например, он истек),
+            // то выходим из системы, чтобы очистить невалидные данные.
+            logout()
         }
-      }
-    
-      // Возвращаем все, что должно быть доступно извне хранилища
-      return {
+    }
+
+    // Возвращаем все, что должно быть доступно извне хранилища
+    return {
         accessToken,
         refreshToken,
         isAuthenticated,
@@ -145,5 +146,5 @@ export const useAuthStore = defineStore('auth', () => {
         regNewUser,
         setTokens,
         refreshAccessToken, // Экспортируем новую функцию
-      }
-    })
+    }
+})
