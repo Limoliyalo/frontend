@@ -20,7 +20,8 @@ const password = ref('')
 onMounted(() => {
     try {
         // В настоящем приложении Telegram Mini App ID пользователя получают так:
-        tgId.value = window.Telegram.WebApp.initDataUnsafe.user.id
+        tgId.value = 1
+        // tgId.value = window.Telegram.WebApp.initDataUnsafe.user.id
 
         // ДЛЯ ТЕСТИРОВАНИЯ: мы временно подставим сюда тестовый ID.
         // Замените 123456789 на реальный ID для проверки работы логики.

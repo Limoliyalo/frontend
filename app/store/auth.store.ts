@@ -23,9 +23,19 @@ export const useAuthStore = defineStore('auth', () => {
     // 1. СОСТОЯНИЕ (State)
 
     // refreshToken будет храниться в cookie, что переживет перезагрузку страницы.
-    const refreshToken = useCookie<string | null>('refreshToken')
-    // accessToken хранится только в памяти (ref), для быстрого доступа.
-    const accessToken = ref<string | null>(null)
+    const refreshToken = useCookie<string | null>('refreshToken', {
+        httpOnly: false, // Нужен доступ из JS для отправки на сервер
+        secure: false, // В development режиме false, в production true
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 7, // 7 дней
+    })
+    // accessToken также сохраняем в cookie для восстановления при обновлении
+    const accessToken = useCookie<string | null>('accessToken', {
+        httpOnly: false,
+        secure: false, // В development режиме false, в production true
+        sameSite: 'strict',
+        maxAge: 60 * 60, // 1 час
+    })
 
     // 2. ГЕТТЕРЫ (Getters)
 
@@ -73,7 +83,7 @@ export const useAuthStore = defineStore('auth', () => {
      * @param {NewUser} user - Данные нового пользователя.
      */
     async function regNewUser(user: NewUser) {
-        console.log('тут буду храниться типы юзеров в логи', user);
+        console.log('тут буду храниться типы юзеров в логи', user)
         const config = useRuntimeConfig()
         try {
             await $fetch('/users/register', {
@@ -105,6 +115,29 @@ export const useAuthStore = defineStore('auth', () => {
         console.log('Токены очищены.')
         // Можно также перенаправить на главную или страницу входа
         navigateTo('/register')
+    }
+
+    /**
+     * Инициализирует токены при загрузке приложения.
+     * Проверяет, есть ли валидный access_token, если нет - пытается обновить через refresh_token.
+     */
+    async function initializeAuth() {
+        console.log('Инициализация авторизации...')
+
+        // Если access_token уже есть, ничего не делаем
+        if (accessToken.value) {
+            console.log('Access token уже существует')
+            return
+        }
+
+        // Если нет refresh_token, выходим
+        if (!refreshToken.value) {
+            console.log('Refresh token отсутствует')
+            return
+        }
+
+        // Пытаемся обновить токены
+        await refreshAccessToken()
     }
 
     /**
@@ -145,6 +178,7 @@ export const useAuthStore = defineStore('auth', () => {
         logout,
         regNewUser,
         setTokens,
-        refreshAccessToken, // Экспортируем новую функцию
+        refreshAccessToken,
+        initializeAuth, // Экспортируем новую функцию
     }
 })
