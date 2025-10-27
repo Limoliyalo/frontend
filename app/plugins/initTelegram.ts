@@ -13,7 +13,7 @@ export default defineNuxtPlugin(nuxtApp => {
         // Получаем пользователя и сохраняем в store
         const user = WebApp.initDataUnsafe?.user
         if (user) {
-            
+            console.log('dasdaasdasdasdasdasdasdasd')
 
             // Загружаем пользователя в store
             nuxtApp.hook('app:created', () => {
