@@ -23,6 +23,12 @@ export default defineNuxtConfig({
                         'Соревнуйся с здрузьями в ЗОЖ и следи за своим здоровьем!',
                 },
             ],
+            script: [
+                {
+                    src: 'https://telegram.org/js/telegram-web-app.js',
+                    defer: true,
+                },
+            ],
         },
     },
     nitro: {
