@@ -16,9 +16,11 @@ export default defineNuxtPlugin(nuxtApp => {
             console.log('Пользователь Telegram:', user)
 
             // Загружаем пользователя в store
-            const userStore = useMyUserStore()
-            userStore.setUser(user)
-            console.log(user)
+            nuxtApp.hook('app:created', () => {
+                const userStore = useMyUserStore()
+                userStore.setUser(user)
+                console.log(user)
+            })
         }
     }
 })
