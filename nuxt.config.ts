@@ -11,6 +11,7 @@ export default defineNuxtConfig({
         '@nuxt/image',
         '@nuxt/ui',
         'nuxt-swiper',
+        '@pinia/nuxt',
     ],
 
     app: {

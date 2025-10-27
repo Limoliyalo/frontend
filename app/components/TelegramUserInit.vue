@@ -3,53 +3,29 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, nextTick } from 'vue'
+import { onMounted } from 'vue'
 import { useMyUserStore } from '../stores/user.store'
 
-const initUser = async () => {
-    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-        const WebApp = (window as any).Telegram.WebApp
-        const user = WebApp.initDataUnsafe?.user
+onMounted(() => {
+    // Проверяем, что мы на клиенте
+    if (typeof window === 'undefined') return
 
-        if (user) {
-            console.log('Пользователь Telegram:', user)
+    // Проверяем наличие Telegram WebApp
+    if (!(window as any).Telegram?.WebApp) return
 
-            // Ждем полной инициализации Vue и Pinia
-            await nextTick()
+    const WebApp = (window as any).Telegram.WebApp
+    const user = WebApp.initDataUnsafe?.user
 
-            // Дополнительная задержка для гарантии готовности store
-            setTimeout(() => {
-                try {
-                    const userStore = useMyUserStore()
-                    userStore.setUser(user)
-                    console.log('Пользователь успешно загружен в store')
-                } catch (error) {
-                    console.error(
-                        'Ошибка при загрузке пользователя в store:',
-                        error
-                    )
-                    // Повторяем попытку через некоторое время
-                    setTimeout(() => {
-                        try {
-                            const userStore = useMyUserStore()
-                            userStore.setUser(user)
-                            console.log(
-                                'Пользователь успешно загружен в store (повторная попытка)'
-                            )
-                        } catch (retryError) {
-                            console.error(
-                                'Ошибка при повторной загрузке пользователя:',
-                                retryError
-                            )
-                        }
-                    }, 100)
-                }
-            }, 50)
+    if (user) {
+        console.log('Пользователь Telegram:', user)
+
+        try {
+            const userStore = useMyUserStore()
+            userStore.setUser(user)
+            console.log('Пользователь успешно загружен в store')
+        } catch (error) {
+            console.error('Ошибка при загрузке пользователя в store:', error)
         }
     }
-}
-
-onMounted(() => {
-    initUser()
 })
 </script>
