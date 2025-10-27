@@ -13,12 +13,14 @@ interface TelegramUser {
 interface UserState {
     user: TelegramUser | null
     isLoaded: boolean
+    initData: string | null
 }
 
 export const useMyUserStore = defineStore('myUserStore', {
     state: (): UserState => ({
         user: null,
         isLoaded: false,
+        initData: null,
     }),
     getters: {
         getUser: (state: UserState) => state.user,
@@ -37,12 +39,19 @@ export const useMyUserStore = defineStore('myUserStore', {
         isPremium: (state: UserState) => state.user?.is_premium || false,
         getPhotoUrl: (state: UserState) => state.user?.photo_url || null,
         isUserLoaded: (state: UserState) => state.isLoaded,
+        getInitData: (state: UserState) => state.initData,
     },
     actions: {
         setUser(user: TelegramUser | null) {
             this.user = user
             this.isLoaded = true
-            console.log('Пользователь Telegrammmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm:', user)
+            console.log(
+                'Пользователь Telegrammmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm:',
+                user
+            )
+        },
+        setInitData(initData: string | null) {
+            this.initData = initData
         },
         loadUserFromTelegram() {
             if (
@@ -52,6 +61,15 @@ export const useMyUserStore = defineStore('myUserStore', {
                 this.setUser(
                     (window as any).Telegram.WebApp.initDataUnsafe.user
                 )
+            }
+        },
+        loadInitData() {
+            if (
+                typeof window !== 'undefined' &&
+                (window as any).Telegram?.WebApp
+            ) {
+                const initData = (window as any).Telegram.WebApp.initData
+                this.setInitData(initData || null)
             }
         },
     },

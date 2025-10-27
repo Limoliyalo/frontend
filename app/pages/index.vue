@@ -11,6 +11,7 @@
         <NuxtLink to="/settings" class="absolute top-7 right-2 z-10">
             <div><Icon name="hugeicons:settings-05" size="32" /></div>
         </NuxtLink>
+        <Register />
     </div>
 </template>
 

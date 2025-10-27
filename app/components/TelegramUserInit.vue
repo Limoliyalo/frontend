@@ -16,16 +16,19 @@ onMounted(() => {
     const WebApp = (window as any).Telegram.WebApp
     const user = WebApp.initDataUnsafe?.user
 
-    if (user) {
-        console.log('Пользователь Telegram:', user)
+    try {
+        const userStore = useMyUserStore()
 
-        try {
-            const userStore = useMyUserStore()
+        // Загружаем initData
+        userStore.loadInitData()
+
+        if (user) {
+            console.log('Пользователь Telegram:', user)
             userStore.setUser(user)
             console.log('Пользователь успешно загружен в store')
-        } catch (error) {
-            console.error('Ошибка при загрузке пользователя в store:', error)
         }
+    } catch (error) {
+        console.error('Ошибка при загрузке данных в store:', error)
     }
 })
 </script>
