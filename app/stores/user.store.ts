@@ -42,6 +42,7 @@ export const useMyUserStore = defineStore('myUserStore', {
         setUser(user: TelegramUser | null) {
             this.user = user
             this.isLoaded = true
+            console.log('Пользователь Telegrammmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm:', user)
         },
         loadUserFromTelegram() {
             if (

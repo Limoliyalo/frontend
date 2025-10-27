@@ -13,13 +13,12 @@ export default defineNuxtPlugin(nuxtApp => {
         // Получаем пользователя и сохраняем в store
         const user = WebApp.initDataUnsafe?.user
         if (user) {
-            console.log('Пользователь Telegram:', user)
+            
 
             // Загружаем пользователя в store
             nuxtApp.hook('app:created', () => {
                 const userStore = useMyUserStore()
                 userStore.setUser(user)
-                console.log(user)
             })
         }
     }
