@@ -2,6 +2,7 @@
     <div class="glass-container absolute w-full bottom-4 z-10000">
         <navbar />
     </div>
+    <TelegramUserInit />
     <slot />
 </template>
 

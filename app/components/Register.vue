@@ -47,9 +47,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useApi } from '~/composables/useApi'
-import { useMyUserStore } from '~/stores/user.store'
+import { ref, onMounted, watchEffect } from 'vue'
+import { useApi } from '../composables/useApi'
+import { useMyUserStore } from '../stores/user.store'
 
 const characterName = ref('')
 const gender = ref('')
@@ -59,10 +59,17 @@ console.log('userStore.getUserId', userStore.getUserId)
 
 const registerUser = async () => {
     try {
+        const telegramId = userStore.getUserId
+        if (!telegramId) {
+            console.warn(
+                'Telegram userId is not loaded yet, skip register for now'
+            )
+            return
+        }
         const response = await apiRequest('/users/register', {
             method: 'POST',
             body: JSON.stringify({
-                telegram_id: userStore.getUserId,
+                telegram_id: telegramId,
                 password: '1234565',
             }),
         })
@@ -119,7 +126,22 @@ const ensureUserRegistered = async () => {
 }
 
 onMounted(() => {
-    ensureUserRegistered()
+    // Ждем, пока загрузятся initData (токен) и телеграм-пользователь
+    const stop = watchEffect(async onInvalidate => {
+        const hasToken = !!userStore.getInitData
+        const hasUser = !!userStore.getUser
+        if (!hasToken || !hasUser) return
+
+        let cancelled = false
+        onInvalidate(() => {
+            cancelled = true
+        })
+
+        await ensureUserRegistered()
+        if (!cancelled) {
+            stop()
+        }
+    })
 })
 </script>
 
