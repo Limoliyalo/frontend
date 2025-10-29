@@ -55,25 +55,71 @@ const characterName = ref('')
 const gender = ref('')
 const { apiRequest } = useApi()
 const userStore = useMyUserStore()
+console.log('userStore.getUserId', userStore.getUserId)
 
-const handleSubmit = async () => {
+const registerUser = async () => {
     try {
         const response = await apiRequest('/users/register', {
             method: 'POST',
             body: JSON.stringify({
                 telegram_id: userStore.getUserId,
+                password: '1234565',
             }),
         })
         console.log('Registration successful:', response)
     } catch (error) {
+        const anyErr: any = error
+        // Если пользователь уже существует (например, 409), молча игнорируем
+        if (anyErr?.status === 409 || anyErr?.status === 400) {
+            console.warn('User already registered, skipping registration')
+            return
+        }
         console.error('Registration failed:', error)
         alert('Registration failed')
     }
 }
 
+const createCharacter = async () => {
+    try {
+        const response = await apiRequest('/characters/me', {
+            method: 'POST',
+            body: JSON.stringify({
+                name: characterName.value,
+                sex: gender.value,
+            }),
+        })
+        console.log('Character creation successful:', response)
+        alert('Персонаж успешно создан!')
+    } catch (error) {
+        console.error('Character creation failed:', error)
+        alert('Ошибка создания персонажа')
+    }
+}
+
+const handleSubmit = () => {
+    createCharacter()
+}
+
+const ensureUserRegistered = async () => {
+    try {
+        // Если профиль доступен, пользователь уже зарегистрирован
+        await apiRequest('/users/me', { method: 'GET' })
+        console.log('User already exists, skip registration')
+        return
+    } catch (error) {
+        const anyErr: any = error
+        // Если 401/404 — пользователя нет, пробуем зарегистрировать
+        if (anyErr?.status === 401 || anyErr?.status === 404) {
+            await registerUser()
+            return
+        }
+        // Иные ошибки пробрасываем/логируем
+        console.error('Failed to check user existence:', error)
+    }
+}
+
 onMounted(() => {
-    // Автоматически вызываем регистрацию при монтировании
-    handleSubmit()
+    ensureUserRegistered()
 })
 </script>
 

@@ -24,7 +24,7 @@ export const useMyUserStore = defineStore('myUserStore', {
     }),
     getters: {
         getUser: (state: UserState) => state.user,
-        getUserId: (state: UserState) => state.user?.id || null,
+        getUserId: (state: UserState) => state.user?.id,
         getUsername: (state: UserState) => state.user?.username || null,
         getFirstName: (state: UserState) => state.user?.first_name || null,
         getLastName: (state: UserState) => state.user?.last_name || null,
@@ -70,6 +70,9 @@ export const useMyUserStore = defineStore('myUserStore', {
             ) {
                 const initData = (window as any).Telegram.WebApp.initData
                 this.setInitData(initData || null)
+            } else {
+                // Если приложение не запущено в Telegram, используем тестовый initData
+                this.setInitData('test_init_data')
             }
         },
     },

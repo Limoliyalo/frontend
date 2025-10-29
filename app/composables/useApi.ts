@@ -1,11 +1,14 @@
 import { useMyUserStore } from '~/stores/user.store'
 
-const BASE_URL = 'http://localhost:8000/api/v1'
+const BASE_URL = 'https://backend-3-4gbp.onrender.com/api/v1'
 
 export const useApi = () => {
     const userStore = useMyUserStore()
 
-    const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
+    const apiRequest = async (
+        endpoint: string,
+        options: RequestInit = {}
+    ): Promise<any> => {
         const initData = userStore.getInitData
         const url = endpoint.startsWith('http')
             ? endpoint
@@ -24,10 +27,32 @@ export const useApi = () => {
         })
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
+            let errorBody: any = null
+            const contentType = response.headers.get('content-type') || ''
+            try {
+                if (contentType.includes('application/json')) {
+                    errorBody = await response.json()
+                } else {
+                    errorBody = await response.text()
+                }
+            } catch {
+                errorBody = null
+            }
+
+            const error: any = new Error(
+                `HTTP error ${response.status}: ${response.statusText}`
+            )
+            error.status = response.status
+            error.body = errorBody
+            error.url = url
+            throw error
         }
 
-        return response.json()
+        const resContentType = response.headers.get('content-type') || ''
+        if (resContentType.includes('application/json')) {
+            return response.json()
+        }
+        return response.text()
     }
 
     return {
