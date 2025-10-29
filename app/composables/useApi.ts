@@ -27,32 +27,10 @@ export const useApi = () => {
         })
 
         if (!response.ok) {
-            let errorBody: any = null
-            const contentType = response.headers.get('content-type') || ''
-            try {
-                if (contentType.includes('application/json')) {
-                    errorBody = await response.json()
-                } else {
-                    errorBody = await response.text()
-                }
-            } catch {
-                errorBody = null
-            }
-
-            const error: any = new Error(
-                `HTTP error ${response.status}: ${response.statusText}`
-            )
-            error.status = response.status
-            error.body = errorBody
-            error.url = url
-            throw error
+            throw new Error(`HTTP error! status: ${response.status}`)
         }
 
-        const resContentType = response.headers.get('content-type') || ''
-        if (resContentType.includes('application/json')) {
-            return response.json()
-        }
-        return response.text()
+        return response.json()
     }
 
     return {

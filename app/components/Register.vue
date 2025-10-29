@@ -47,9 +47,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect } from 'vue'
-import { useApi } from '../composables/useApi'
-import { useMyUserStore } from '../stores/user.store'
+import { ref, onMounted } from 'vue'
+import { useApi } from '~/composables/useApi'
+import { useMyUserStore } from '~/stores/user.store'
 
 const characterName = ref('')
 const gender = ref('')
@@ -59,28 +59,15 @@ console.log('userStore.getUserId', userStore.getUserId)
 
 const registerUser = async () => {
     try {
-        const telegramId = userStore.getUserId
-        if (!telegramId) {
-            console.warn(
-                'Telegram userId is not loaded yet, skip register for now'
-            )
-            return
-        }
         const response = await apiRequest('/users/register', {
             method: 'POST',
             body: JSON.stringify({
-                telegram_id: telegramId,
+                telegram_id: userStore.getUserId,
                 password: '1234565',
             }),
         })
         console.log('Registration successful:', response)
     } catch (error) {
-        const anyErr: any = error
-        // Если пользователь уже существует (например, 409), молча игнорируем
-        if (anyErr?.status === 409 || anyErr?.status === 400) {
-            console.warn('User already registered, skipping registration')
-            return
-        }
         console.error('Registration failed:', error)
         alert('Registration failed')
     }
@@ -107,41 +94,9 @@ const handleSubmit = () => {
     createCharacter()
 }
 
-const ensureUserRegistered = async () => {
-    try {
-        // Если профиль доступен, пользователь уже зарегистрирован
-        await apiRequest('/users/me', { method: 'GET' })
-        console.log('User already exists, skip registration')
-        return
-    } catch (error) {
-        const anyErr: any = error
-        // Если 401/404 — пользователя нет, пробуем зарегистрировать
-        if (anyErr?.status === 401 || anyErr?.status === 404) {
-            await registerUser()
-            return
-        }
-        // Иные ошибки пробрасываем/логируем
-        console.error('Failed to check user existence:', error)
-    }
-}
-
 onMounted(() => {
-    // Ждем, пока загрузятся initData (токен) и телеграм-пользователь
-    const stop = watchEffect(async onInvalidate => {
-        const hasToken = !!userStore.getInitData
-        const hasUser = !!userStore.getUser
-        if (!hasToken || !hasUser) return
-
-        let cancelled = false
-        onInvalidate(() => {
-            cancelled = true
-        })
-
-        await ensureUserRegistered()
-        if (!cancelled) {
-            stop()
-        }
-    })
+    // Сначала регистрируем пользователя
+    registerUser()
 })
 </script>
 
