@@ -1,5 +1,5 @@
 <template>
-    <div class="register-container">
+    <div v-if="!isRegistered" class="register-container">
         <div class="glass-container">
             <form @submit.prevent="handleSubmit">
                 <div class="mb-4">
@@ -53,9 +53,20 @@ import { useMyUserStore } from '~/stores/user.store'
 
 const characterName = ref('')
 const gender = ref('')
+const isRegistered = ref(false)
 const { apiRequest } = useApi()
 const userStore = useMyUserStore()
 console.log('userStore.getUserId', userStore.getUserId)
+
+const checkCharacter = async () => {
+    try {
+        await apiRequest('/characters/me', { method: 'GET' })
+        isRegistered.value = true
+    } catch (error) {
+        console.log('Character not found, proceeding with registration')
+        registerUser()
+    }
+}
 
 const registerUser = async () => {
     try {
@@ -84,6 +95,7 @@ const createCharacter = async () => {
         })
         console.log('Character creation successful:', response)
         alert('Персонаж успешно создан!')
+        isRegistered.value = true
     } catch (error) {
         console.error('Character creation failed:', error)
         alert('Ошибка создания персонажа')
@@ -95,8 +107,7 @@ const handleSubmit = () => {
 }
 
 onMounted(() => {
-    // Сначала регистрируем пользователя
-    registerUser()
+    checkCharacter()
 })
 </script>
 

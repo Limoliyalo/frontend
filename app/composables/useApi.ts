@@ -1,6 +1,6 @@
 import { useMyUserStore } from '~/stores/user.store'
 
-const BASE_URL = 'https://backend-3-4gbp.onrender.com/api/v1'
+const BASE_URL = 'https://healthity.ru/api/v1'
 
 export const useApi = () => {
     const userStore = useMyUserStore()
