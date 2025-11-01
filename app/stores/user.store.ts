@@ -12,17 +12,16 @@ interface TelegramUser {
 
 interface UserState {
     user: TelegramUser | null
-    isLoaded: boolean
     initData: string | null
 }
 
 export const useMyUserStore = defineStore('myUserStore', {
     state: (): UserState => ({
         user: null,
-        isLoaded: false,
         initData: null,
     }),
     getters: {
+        isAuthorized: state => !!state.user && !!state.initData,
         getUser: (state: UserState) => state.user,
         getUserId: (state: UserState) => state.user?.id,
         getUsername: (state: UserState) => state.user?.username || null,
@@ -38,42 +37,34 @@ export const useMyUserStore = defineStore('myUserStore', {
             state.user?.language_code || null,
         isPremium: (state: UserState) => state.user?.is_premium || false,
         getPhotoUrl: (state: UserState) => state.user?.photo_url || null,
-        isUserLoaded: (state: UserState) => state.isLoaded,
+
         getInitData: (state: UserState) => state.initData,
     },
     actions: {
-        setUser(user: TelegramUser | null) {
+        setUser(user: TelegramUser, initData: string) {
             this.user = user
-            this.isLoaded = true
+            this.initData = initData
+            localStorage.setItem('tg_user', JSON.stringify(user))
+            localStorage.setItem('tg_initData', initData)
             console.log(
                 'Пользователь Telegrammmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm:',
                 user
             )
         },
-        setInitData(initData: string | null) {
-            this.initData = initData
-        },
-        loadUserFromTelegram() {
-            if (
-                typeof window !== 'undefined' &&
-                (window as any).Telegram?.WebApp?.initDataUnsafe?.user
-            ) {
-                this.setUser(
-                    (window as any).Telegram.WebApp.initDataUnsafe.user
-                )
+
+        loadFromStorage() {
+            const cachedUser = localStorage.getItem('tg_user')
+            const cachedInitData = localStorage.getItem('tg_initData')
+            if (cachedUser && cachedInitData) {
+                this.user = JSON.parse(cachedUser)
+                this.initData = cachedInitData
             }
         },
-        loadInitData() {
-            if (
-                typeof window !== 'undefined' &&
-                (window as any).Telegram?.WebApp
-            ) {
-                const initData = (window as any).Telegram.WebApp.initData
-                this.setInitData(initData || null)
-            } else {
-                // Если приложение не запущено в Telegram, используем тестовый initData
-                this.setInitData('test_init_data')
-            }
+        clear() {
+            this.user = null
+            this.initData = ''
+            localStorage.removeItem('tg_user')
+            localStorage.removeItem('tg_initData')
         },
     },
 })

@@ -1,6 +1,5 @@
 <template>
     <UApp>
-        <TelegramUserInit />
         <NuxtLayout>
             <NuxtPage />
         </NuxtLayout>
