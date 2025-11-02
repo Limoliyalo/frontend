@@ -14,10 +14,7 @@
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
-interface NavBtn {
-    linkto: string
-    iconName: string
-}
+import type { NavBtn } from '~/types/uiTypes/uiTypes'
 
 const props = defineProps<{
     navBtn: NavBtn

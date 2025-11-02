@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { NavBtn } from '~/types/uiTypes/NavBtn'
+import type { NavBtn } from '~/types/uiTypes/uiTypes'
 
 const navBtns: NavBtn[] = [
     { linkto: '/', iconName: 'hugeicons:home-01' },
