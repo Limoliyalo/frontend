@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useApi } from '#imports'
 
 interface TelegramUser {
     id: number
@@ -13,12 +14,29 @@ interface TelegramUser {
 interface UserState {
     user: TelegramUser | null
     initData: string | null
+    statistic: userStat | null
+}
+
+interface userStat {
+    user_id: number
+    balance: number
+    level: number
+    total_experience: number
+    character_name: string
+    character_sex: string
+    purchased_items_count: number
+    purchased_backgrounds_count: number
+    mood_entries_count: number
+    activities_count: number
+    total_transactions: number
+    friends_count: number
 }
 
 export const useMyUserStore = defineStore('myUserStore', {
     state: (): UserState => ({
         user: null,
         initData: null,
+        statistic: null,
     }),
     getters: {
         isAuthorized: state => !!state.user && !!state.initData,
@@ -37,7 +55,7 @@ export const useMyUserStore = defineStore('myUserStore', {
             state.user?.language_code || null,
         isPremium: (state: UserState) => state.user?.is_premium || false,
         getPhotoUrl: (state: UserState) => state.user?.photo_url || null,
-
+        getStatistic: (state: UserState) => state.statistic,
         getInitData: (state: UserState) => state.initData,
     },
     actions: {
@@ -65,6 +83,24 @@ export const useMyUserStore = defineStore('myUserStore', {
             this.initData = ''
             localStorage.removeItem('tg_user')
             localStorage.removeItem('tg_initData')
+        },
+
+        async loadUserStatistic() {
+            const { apiRequest } = useApi()
+            try {
+                this.statistic = await apiRequest('/users/me/statistics', {
+                    method: 'GET',
+                })
+                console.log(
+                    'userStat.valueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                    this.statistic
+                )
+            } catch (error) {
+                console.log(
+                    'Не удалось загрузить статистику пользователя',
+                    error
+                )
+            }
         },
     },
 })
