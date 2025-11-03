@@ -1,14 +1,25 @@
 <template>
-    <div class="flex items-center justify-around">
+    <div v-if="userStore.settings" class="flex items-center justify-around">
         <span class="text-xs text-start">Включить режим не беспокоить</span>
         <USwitch v-model="doNotDisturb" />
     </div>
+    <div v-else>Загрузка...</div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useMyUserStore } from '~/stores/user.store'
 
-const doNotDisturb = ref(true)
+const userStore = useMyUserStore()
+
+const doNotDisturb = computed({
+    get: () => userStore.settings?.do_not_disturb ?? false,
+    set: async (val: boolean) => {
+        // реактивно обновляем локально
+        if (userStore.settings) userStore.settings.do_not_disturb = val
+
+        // отправляем PATCH
+        await userStore.updateUserSettings({ do_not_disturb: val })
+    },
+})
 </script>
-
-<style></style>

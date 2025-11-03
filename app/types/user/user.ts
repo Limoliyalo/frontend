@@ -27,4 +27,16 @@ export interface UserState {
     user: TelegramUser | null
     initData: string | null
     statistic: userStat | null
+    settings: userSettings | null
+}
+
+export interface userSettings {
+    quiet_start_time: string
+    quiet_end_time: string
+    muted_days: string[]
+    do_not_disturb: boolean
+    id: string
+    user_tg_id: number
+    created_at: string
+    updated_at: string
 }

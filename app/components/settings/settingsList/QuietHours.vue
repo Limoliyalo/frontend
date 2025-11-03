@@ -11,9 +11,24 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-const quietHoursFrom = ref('22:00')
-const quietHoursTo = ref('08:00')
-</script>
+import { computed } from 'vue'
+import { useMyUserStore } from '~/stores/user.store'
 
-<style></style>
+const userStore = useMyUserStore()
+
+const quietHoursFrom = computed({
+    get: () => userStore.settings?.quiet_start_time ?? '00:00:00',
+    set: async (val: string) => {
+        if (userStore.settings) userStore.settings.quiet_start_time = val
+        await userStore.updateUserSettings({ quiet_start_time: val })
+    },
+})
+
+const quietHoursTo = computed({
+    get: () => userStore.settings?.quiet_end_time ?? '00:00:00',
+    set: async (val: string) => {
+        if (userStore.settings) userStore.settings.quiet_end_time = val
+        await userStore.updateUserSettings({ quiet_end_time: val })
+    },
+})
+</script>

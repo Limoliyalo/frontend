@@ -13,6 +13,14 @@
 
 <script lang="ts" setup>
 import { settingsArr } from '../components/settings/AllSettings'
+import { onMounted } from 'vue'
+import { useMyUserStore } from '~/stores/user.store'
+
+const userStore = useMyUserStore()
+
+onMounted(() => {
+    userStore.loadUserSettings()
+})
 </script>
 
 <style></style>
