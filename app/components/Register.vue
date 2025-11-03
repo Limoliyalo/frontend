@@ -1,5 +1,5 @@
 <template>
-    <div v-if="!isRegistered" class="register-container">
+    <div v-if="!characterStore.isRegistered" class="register-container">
         <div class="glass-container">
             <form @submit.prevent="handleSubmit">
                 <div class="mb-4">
@@ -50,19 +50,17 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useMyUserStore } from '~/stores/user.store'
+import { useMyCharacterStore } from '~/stores/character.store'
 
 const characterName = ref('')
 const gender = ref('')
-const isRegistered = ref(false)
-const { apiRequest } = useApi()
+const characterStore = useMyCharacterStore()
 const userStore = useMyUserStore()
-console.log('userStore.getUserId', userStore.getUserId)
+const { apiRequest } = useApi()
 
 const checkCharacter = async () => {
-    try {
-        await apiRequest('/characters/me', { method: 'GET' })
-        isRegistered.value = true
-    } catch (error) {
+    const isRegistered = await characterStore.loadMyCharacter()
+    if (!isRegistered) {
         console.log('Character not found, proceeding with registration')
         registerUser()
     }
@@ -84,26 +82,16 @@ const registerUser = async () => {
     }
 }
 
-const createCharacter = async () => {
-    try {
-        const response = await apiRequest('/characters/me', {
-            method: 'POST',
-            body: JSON.stringify({
-                name: characterName.value,
-                sex: gender.value,
-            }),
-        })
-        console.log('Character creation successful:', response)
+const handleSubmit = async () => {
+    const success = await characterStore.createCharacter(
+        characterName.value,
+        gender.value
+    )
+    if (success) {
         alert('Персонаж успешно создан!')
-        isRegistered.value = true
-    } catch (error) {
-        console.error('Character creation failed:', error)
+    } else {
         alert('Ошибка создания персонажа')
     }
-}
-
-const handleSubmit = () => {
-    createCharacter()
 }
 
 onMounted(() => {

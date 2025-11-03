@@ -1,32 +1,54 @@
 <template>
+    <div class="flex items-center justify-center pb-8">
+        <svg :width="size" :height="size" class="ring-chart">
+            <!-- Фоновые дуги -->
+            <path
+                v-for="(segment, index) in segments"
+                :key="`bg-${index}`"
+                :d="getBackgroundPath(index)"
+                fill="none"
+                :stroke="backgroundColor[index]"
+                :stroke-width="strokeWidth"
+                stroke-linecap="butt"
+            />
+
+            <!-- Прогресс-дуги -->
+            <path
+                v-for="(segment, index) in segments"
+                :key="`progress-${index}`"
+                :d="createArc(segment.progress, index)"
+                fill="none"
+                :stroke="segment.color"
+                :stroke-width="strokeWidth"
+                stroke-linecap="round"
+                class="progress-arc"
+            />
+            <!-- 📸 Фото пользователя в центре -->
+            <circle
+                :cx="center"
+                :cy="center"
+                :r="innerRadius"
+                fill="white"
+                stroke="#ddd"
+                stroke-width="2"
+            />
+            <clipPath id="user-photo-mask">
+                <circle :cx="center" :cy="center" :r="innerRadius" />
+            </clipPath>
+            <image
+                v-if="photoUrl"
+                :x="center - innerRadius"
+                :y="center - innerRadius"
+                :width="innerRadius * 2"
+                :height="innerRadius * 2"
+                :href="photoUrl"
+                clip-path="url(#user-photo-mask)"
+                preserveAspectRatio="xMidYMid slice"
+            />
+        </svg>
+    </div>
+
     <div class="glass-container flex items-center justify-around w-full">
-        <div>
-            <svg :width="size" :height="size" class="ring-chart">
-                <!-- Фоновые дуги -->
-                <path
-                    v-for="(segment, index) in segments"
-                    :key="`bg-${index}`"
-                    :d="getBackgroundPath(index)"
-                    fill="none"
-                    :stroke="backgroundColor[index]"
-                    :stroke-width="strokeWidth"
-                    stroke-linecap="butt"
-                />
-
-                <!-- Прогресс-дуги -->
-                <path
-                    v-for="(segment, index) in segments"
-                    :key="`progress-${index}`"
-                    :d="createArc(segment.progress, index)"
-                    fill="none"
-                    :stroke="segment.color"
-                    :stroke-width="strokeWidth"
-                    stroke-linecap="round"
-                    class="progress-arc"
-                />
-            </svg>
-        </div>
-
         <p class="text-center text-xs">
             Прогресс {{ userStat?.character_name }} за день
         </p>
@@ -57,13 +79,15 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    size: 80,
+    size: 120,
     strokeWidth: 10,
     gapAngle: 3,
 })
 
 const radius = computed(() => (props.size / 2) * 0.8)
 const center = computed(() => props.size / 2)
+const photoUrl = computed(() => userStore.getPhotoUrl)
+const innerRadius = computed(() => radius.value * 0.9) // радиус для фото внутри
 
 const getSegmentPath = (segmentIndex: number) => {
     const startAngle = -90
