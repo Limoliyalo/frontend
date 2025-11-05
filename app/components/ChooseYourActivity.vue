@@ -1,5 +1,6 @@
 <template>
     <div
+        v-if="isVisible"
         class="fixed top-0 left-0 w-dvw h-dvh z-1000 flex flex-col items-center justify-center"
     >
         <h1
@@ -32,14 +33,18 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { useActivitiesStore } from '~/stores/activities.store'
+import { useMyCharacterStore } from '~/stores/character.store'
 import type {
     ActivityType,
     ActivityCreatePayload,
 } from '~/types/activities/activities'
 
 const activitiesStore = useActivitiesStore()
+const characterStore = useMyCharacterStore()
+
+const isVisible = ref(false)
 
 // We create a new type that includes a 'selected' flag for the checkbox
 type SelectableActivity = ActivityType & {
@@ -51,24 +56,55 @@ type SelectableActivity = ActivityType & {
 
 const allActivities = ref<SelectableActivity[]>([])
 
-onMounted(async () => {
-    await activitiesStore.loadActivitiesCatalog()
-    // We map the original activities to our new type, adding the 'selected' property
-    allActivities.value = activitiesStore.allActivities.map(activity => ({
-        ...activity,
-        selected: false,
-        value: 0,
-        goal: activity.daily_goal_default,
-        notes: null,
-    }))
-})
-
-async function Submit(userDailyActivities: SelectableActivity[]) {
-    userDailyActivities.forEach(element => {
-        if (element.selected) {
-            activitiesStore.makeUserDailyActivity(element)
+watch(
+    () => characterStore.isRegistered,
+    async isRegistered => {
+        if (isRegistered) {
+            await activitiesStore.loadUserActivities()
+            if (activitiesStore.userActivities.length === 0) {
+                await activitiesStore.loadActivitiesCatalog()
+                allActivities.value = activitiesStore.allActivities.map(
+                    activity => ({
+                        ...activity,
+                        selected: false,
+                        value: 0,
+                        goal: activity.daily_goal_default,
+                        notes: null,
+                    })
+                )
+                isVisible.value = true
+            } else {
+                isVisible.value = false
+            }
+        } else {
+            isVisible.value = false
         }
-    })
+    },
+    { immediate: true }
+)
+
+async function Submit() {
+    const activitiesToSubmit = allActivities.value.filter(
+        (activity, index) => index < 3 || activity.selected
+    )
+
+    if (activitiesToSubmit.length === 0) {
+        isVisible.value = false
+        return
+    }
+
+    const promises = activitiesToSubmit.map(activity =>
+        activitiesStore.makeUserDailyActivity(activity)
+    )
+
+    try {
+        await Promise.all(promises)
+        isVisible.value = false
+        alert('Activities submitted successfully!')
+    } catch (error) {
+        console.error('Failed to submit activities:', error)
+        alert('Failed to submit activities. Please try again later.')
+    }
 }
 </script>
 

@@ -2,38 +2,51 @@
     <div class="glass-container overflow-y-auto mt-8 p-4">
         <div class="grid grid-cols-1 gap-4">
             <userinfo-user-activity
-                v-for="(activity, index) in activities"
-                :key="index"
-                :linkto="activity.linkto"
-                :iconName="activity.iconName"
-                :text="activity.text"
+                v-for="activity in combinedActivities"
+                :key="activity.id"
+                :text="activity.name"
                 :color="activity.color"
+                :goal="activity.goal"
+                :unit="activity.unit"
+                :value="activity.value"
             />
         </div>
     </div>
 </template>
 
 <script lang="ts" setup>
-const activities = [
-    {
-        linkto: '/aboutWater',
-        iconName: 'hugeicons:water-energy',
-        text: 'Сколько вы пили за день',
-        color: 'blue',
-    },
-    {
-        linkto: '/aboutBack',
-        iconName: 'hugeicons:time-quarter-pass',
-        text: 'Следить за осанкой',
-        color: 'green',
-    },
-    {
-        linkto: '/aboutFood',
-        iconName: 'hugeicons:organic-food',
-        text: 'Сколько вы ели за день',
-        color: 'yellow',
-    },
-]
+import { onMounted, computed } from 'vue'
+import { useActivitiesStore } from '~/stores/activities.store'
+
+const activitiesStore = useActivitiesStore()
+
+onMounted(async () => {
+    await activitiesStore.loadUserActivities()
+    await activitiesStore.loadActivitiesCatalog()
+})
+
+const combinedActivities = computed(() => {
+    const userActivities = activitiesStore.getUserActivities
+    const catalog = activitiesStore.allActivities
+
+    if (!userActivities.length || !catalog.length) {
+        return []
+    }
+
+    return userActivities.map(userActivity => {
+        const activityType = catalog.find(
+            type => type.id === userActivity.activity_type_id
+        )
+        return {
+            id: userActivity.id,
+            name: activityType?.name || 'Unknown Activity',
+            color: activityType?.color || '#FFFFFF',
+            unit: activityType?.unit || '',
+            goal: userActivity.goal,
+            value: userActivity.value,
+        }
+    })
+})
 </script>
 
 <style scoped></style>

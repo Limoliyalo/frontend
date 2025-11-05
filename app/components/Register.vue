@@ -59,11 +59,7 @@ const userStore = useMyUserStore()
 const { apiRequest } = useApi()
 
 const checkCharacter = async () => {
-    const isRegistered = await characterStore.loadMyCharacter()
-    if (!isRegistered) {
-        console.log('Character not found, proceeding with registration')
-        registerUser()
-    }
+    await characterStore.loadMyCharacter()
 }
 
 const registerUser = async () => {

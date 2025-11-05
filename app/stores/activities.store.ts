@@ -13,6 +13,7 @@ export const useActivitiesStore = defineStore('activitiesStore', {
     }),
     getters: {
         allActivities: state => state.activities,
+        getUserActivities: state => state.userActivities,
     },
     actions: {
         async loadActivitiesCatalog() {
@@ -34,9 +35,13 @@ export const useActivitiesStore = defineStore('activitiesStore', {
         },
         async loadUserActivities() {
             const { apiRequest } = useApi()
+            const today = new Date().toISOString().split('T')[0]
             try {
                 this.userActivities = await apiRequest('/daily-activities/me', {
                     method: 'GET',
+                    query: {
+                        day: today,
+                    },
                 })
                 console.log(
                     'Пользовательские активности успешно загружены:',
