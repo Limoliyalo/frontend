@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { useApi } from '#imports'
-import type { ItemState, CharacterItemsCatalog } from '~/types/items/items'
+import type { ItemState } from '~/types/items/items'
 
 export const useItemsStore = defineStore('itemsStore', {
     state: (): ItemState => ({
@@ -10,23 +10,6 @@ export const useItemsStore = defineStore('itemsStore', {
     }),
     getters: {
         allItems: state => state.items,
-        getCombinedItemsCatalog(state): CharacterItemsCatalog[] {
-            // Создаем Map для быстрого поиска предметов пользователя
-            const characterItemsMap = new Map(
-                state.characterItems.map(ci => [ci.item_id, ci])
-            )
-
-            // Проходим по каждому предмету из общего каталога
-            return state.items.map(item => {
-                const characterItem = characterItemsMap.get(item.id)
-                return {
-                    ...item,
-                    is_active: characterItem?.is_active ?? false,
-                    is_favorite: characterItem?.is_favorite ?? false,
-                    character_item_id: characterItem?.id ?? null,
-                }
-            })
-        },
     },
     actions: {
         async loadItemsCatalog() {
@@ -88,6 +71,79 @@ export const useItemsStore = defineStore('itemsStore', {
                 // 4. Откат в случае ошибки: если сервер вернул ошибку,
                 // возвращаем локальное состояние в прежний вид
                 itemToUpdate.is_favorite = !itemToUpdate.is_favorite
+            }
+        },
+        async purchaseItem(item_id: string) {
+            const { apiRequest } = useApi()
+            try {
+                const newCharacterItem = await apiRequest(
+                    '/character-items/me/purchase',
+                    {
+                        method: 'POST',
+                        query: {
+                            item_id: item_id,
+                        },
+                    }
+                )
+                if (newCharacterItem) {
+                    this.characterItems.push(newCharacterItem)
+                }
+                console.log(`Предмет ${item_id} успешно куплен`)
+            } catch (error) {
+                console.error(`Ошибка при покупке предмета ${item_id}:`, error)
+            }
+        },
+        async giveMeMoney(amount: number) {
+            const { apiRequest } = useApi()
+            try {
+                await apiRequest('/users/me/deposit', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        amount: amount,
+                    }),
+                })
+                console.log('Деньги успешно выдано')
+            } catch (error) {
+                console.error('Ошибка при выдаче денег:', error)
+            }
+        },
+        async equipMyItem(character_item_id: string) {
+            const { apiRequest } = useApi()
+            try {
+                await apiRequest(
+                    `/character-items/me/${character_item_id}/equip`,
+                    {
+                        method: 'PATCH',
+                    }
+                )
+                console.log('Предмет успешно экипирован')
+                const equippedItem = this.characterItems.find(
+                    item => item.id === character_item_id
+                )
+                if (!equippedItem) return
+                equippedItem.is_active = true
+            } catch (error) {
+                console.error('Ошибка при экипировке предмета:', error)
+            }
+        },
+        async unequipMyItem(character_item_id: string) {
+            const { apiRequest } = useApi()
+            try {
+                await apiRequest(
+                    `/character-items/me/${character_item_id}/unequip`,
+                    {
+                        method: 'PATCH',
+                    }
+                )
+                console.log('Предмет успешно снят с экипировки')
+                const itemToUnequip = this.characterItems.find(
+                    item => item.id === character_item_id
+                )
+                if (itemToUnequip) {
+                    itemToUnequip.is_active = false
+                }
+            } catch (error) {
+                console.error('Ошибка при снятии с экипировки предмета:', error)
             }
         },
     },

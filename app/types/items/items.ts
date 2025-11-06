@@ -19,12 +19,6 @@ export interface CharacterItem {
     purchased_at: string
 }
 
-export interface CharacterItemsCatalog extends Item {
-    is_active: boolean
-    is_favorite: boolean
-    character_item_id: string | null
-}
-
 export interface ItemState {
     items: Item[]
     characterItems: CharacterItem[]
