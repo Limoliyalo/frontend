@@ -27,8 +27,10 @@
 import { ref, onMounted } from 'vue'
 import { useMyUserStore } from '~/stores/user.store'
 import type { userStat } from '~/types/user/user'
+import { useItemsStore } from '~/stores/items.store'
 
 const userStore = useMyUserStore()
+const itemsStore = useItemsStore()
 
 const userStat = ref<userStat | null>(null)
 
@@ -52,7 +54,11 @@ const handleSearch = (query: string) => {
 }
 
 onMounted(async () => {
-    await userStore.loadUserStatistic()
+    await Promise.all([
+        userStore.loadUserStatistic(),
+        itemsStore.loadItemsCatalog(),
+        itemsStore.loadCharacterItems(),
+    ])
     userStat.value = userStore.getStatistic
 })
 </script>

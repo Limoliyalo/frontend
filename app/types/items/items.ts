@@ -10,7 +10,23 @@ export interface Item {
     updated_at?: string
 }
 
+export interface CharacterItem {
+    character_id: string
+    item_id: string
+    is_active: boolean
+    is_favorite: boolean
+    id: string
+    purchased_at: string
+}
+
+export interface CharacterItemsCatalog extends Item {
+    is_active: boolean
+    is_favorite: boolean
+    character_item_id: string | null
+}
+
 export interface ItemState {
     items: Item[]
+    characterItems: CharacterItem[]
     isLoading: boolean
 }
