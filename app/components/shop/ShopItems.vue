@@ -26,33 +26,34 @@
                     class="w-20 h-20 [@media(max-height:595px)]:w-16 [@media(max-height:595px)]:h-16"
                 /> -->
             </div>
-            <span class="text-xs text-center font-semibold mt-2">{{
-                shopItem.name
-            }}</span>
+            <div>
+                <span class="text-xs text-center font-semibold mt-2">{{
+                    shopItem.name
+                }}</span>
+            </div>
             <div
                 class="flex items-center justify-center"
                 v-if="!shopItem.is_purchased"
             >
                 Цена: {{ shopItem.cost }}
             </div>
-            <button v-if="shopItem.is_purchased" class="purchased-button">
-                <div>
-                    <button
-                        v-if="!shopItem.is_active"
-                        @click="equip(shopItem.character_item_id)"
-                    >
-                        Надеть
-                    </button>
-                    <button v-else @click="unequip(shopItem.character_item_id)">
-                        Снять
-                    </button>
-                </div>
-            </button>
+
+            <div v-if="shopItem.is_purchased">
+                <UButton
+                    v-if="!shopItem.is_active"
+                    @click="equip(shopItem.character_item_id)"
+                >
+                    Надеть
+                </UButton>
+                <UButton v-else @click="unequip(shopItem.character_item_id)">
+                    Снять
+                </UButton>
+            </div>
 
             <!-- Кнопка "Купить" использует shopItem.id -->
-            <button v-else @click="buyItem(shopItem.id)" class="buy-button">
+            <UButton v-else @click="buyItem(shopItem.id)" class="buy-button">
                 Купить
-            </button>
+            </UButton>
         </div>
     </div>
 
@@ -60,7 +61,7 @@
         У вас пока нет понравившихся предметов...
     </div>
     <button
-        class="text-center flex justify-center items-center"
+        class="text-center flex self-center justify-self-center"
         @click="giveMeMoney"
     >
         Дай денег пж
@@ -68,11 +69,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useItemsStore } from '~/stores/items.store'
 import type { CharacterItem } from '~/types/items/items'
-import type { Item } from '~/types/items/items'
 
 const props = defineProps({
     searchQuery: {

@@ -28,9 +28,11 @@ import { ref, onMounted } from 'vue'
 import { useMyUserStore } from '~/stores/user.store'
 import type { userStat } from '~/types/user/user'
 import { useItemsStore } from '~/stores/items.store'
+import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 
 const userStore = useMyUserStore()
 const itemsStore = useItemsStore()
+const backgroundsStore = useMyBackgroundsStore()
 
 const userStat = ref<userStat | null>(null)
 
@@ -58,6 +60,8 @@ onMounted(async () => {
         userStore.loadUserStatistic(),
         itemsStore.loadItemsCatalog(),
         itemsStore.loadCharacterItems(),
+        backgroundsStore.loadBackgroundsCatalog(),
+        backgroundsStore.loadCharacterBackgrounds(),
     ])
     userStat.value = userStore.getStatistic
 })
