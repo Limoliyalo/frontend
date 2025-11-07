@@ -8,6 +8,11 @@
                 <component :is="setting.component" />
             </Settings-Setting>
         </div>
+        <div class="flex flex-col items-center justify-center mt-4">
+            <UButton class="cursor-pointer" @click="deleteMySettings">
+                По умолчанию
+            </UButton>
+        </div>
     </div>
 </template>
 
@@ -21,6 +26,11 @@ const userStore = useMyUserStore()
 onMounted(() => {
     userStore.loadUserSettings()
 })
+
+async function deleteMySettings() {
+    await userStore.deleteUserSettings()
+    await userStore.loadUserSettings()
+}
 </script>
 
 <style></style>

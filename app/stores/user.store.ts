@@ -134,5 +134,20 @@ export const useMyUserStore = defineStore('myUserStore', {
                 // Здесь можно добавить логику отката изменений, если нужно
             }
         },
+        async deleteUserSettings() {
+            const { apiRequest } = useApi()
+            try {
+                await apiRequest('/user-settings/me', {
+                    method: 'DELETE',
+                })
+                this.settings = null
+                console.log('Настройки пользователя успешно удалены')
+            } catch (error) {
+                console.error(
+                    'Не удалось удалить настройки пользователя',
+                    error
+                )
+            }
+        },
     },
 })
