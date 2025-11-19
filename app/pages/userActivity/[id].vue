@@ -55,20 +55,29 @@
 import { useRoute } from 'vue-router'
 import { onMounted, ref } from 'vue'
 import { useActivitiesStore } from '~/stores/activities.store'
-import type { ActivityType } from '~/types/activities/activities'
+import type { UserDailyActivity } from '~/types/activities/activities'
 
 const ActivityStore = useActivitiesStore()
 const route = useRoute()
 const activityId = route.params.id
 const activityName = ref('')
-const userActivityInfo = ref()
+const userActivityInfo = ref<UserDailyActivity | undefined>()
 
 onMounted(async () => {
     await ActivityStore.loadActivitiesCatalog()
     await ActivityStore.loadUserActivities()
-    const currentActivity: ActivityType | undefined =
-        ActivityStore.getActivityById(activityId)
-    activityName.value = currentActivity?.name || 'Неизвестная активность'
-    userActivityInfo.value = ActivityStore.getUserActivityById(activityId)
+
+    const userActivity = ActivityStore.getUserActivityById(activityId)
+    userActivityInfo.value = userActivity
+
+    if (userActivity) {
+        const activityType = ActivityStore.getActivityById(
+            userActivity.activity_type_id
+        )
+
+        activityName.value = activityType?.name || 'Неизвестная активность'
+    } else {
+        activityName.value = 'Активность пользователя не найдена'
+    }
 })
 </script>
