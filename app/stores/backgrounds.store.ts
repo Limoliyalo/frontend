@@ -72,6 +72,13 @@ export const useMyBackgroundsStore = defineStore('backgroundsStore', {
                     }
                 )
                 console.log('Фон успешно экипирован')
+
+                this.characterBackgrounds.forEach(item => {
+                    if (item.is_active) {
+                        item.is_active = false
+                    }
+                })
+
                 const equippedItem = this.characterBackgrounds.find(
                     item => item.id === character_background_id
                 )
