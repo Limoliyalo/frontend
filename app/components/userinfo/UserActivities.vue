@@ -9,6 +9,7 @@
                 :goal="activity.goal"
                 :unit="activity.unit"
                 :value="activity.value"
+                :id="activity.id"
             />
         </div>
     </div>

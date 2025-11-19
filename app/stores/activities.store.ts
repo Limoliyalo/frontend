@@ -5,6 +5,7 @@ import type {
     ActivityCreatePayload,
     ActivityUpdatePayload,
 } from '~/types/activities/activities'
+import { get } from '@nuxt/ui/runtime/utils/index.js'
 
 export const useActivitiesStore = defineStore('activitiesStore', {
     state: (): ActivityState => ({
@@ -14,6 +15,14 @@ export const useActivitiesStore = defineStore('activitiesStore', {
     getters: {
         allActivities: state => state.activities,
         getUserActivities: state => state.userActivities,
+        getActivityById: state => {
+            return (id: string | undefined | string[]) =>
+                state.activities.find(activity => activity.id === id)
+        },
+        getUserActivityById: state => {
+            return (id: string | undefined | string[]) =>
+                state.userActivities.find(activity => activity.id === id)
+        },
     },
     actions: {
         async loadActivitiesCatalog() {
