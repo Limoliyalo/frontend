@@ -12,7 +12,6 @@
             <div><Icon name="hugeicons:settings-05" size="32" /></div>
         </NuxtLink>
         <Register />
-        <ChooseYourActivity />
     </div>
 </template>
 
