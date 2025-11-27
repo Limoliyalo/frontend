@@ -22,15 +22,16 @@ export interface UserDailyActivity {
 }
 
 // 3. Тип для данных при СОЗДАНИИ активности (только то, что нужно)
-export interface ActivityCreatePayload extends ActivityType {
-    value?: number
+export interface ActivityCreatePayload {
+    activity_type_id: string
     goal?: number
-    notes?: string | null
 }
+
+export interface ActivityUpdatePayload extends ActivityCreatePayload {}
 
 // 4. Тип для данных при ОБНОВЛЕНИИ активности
 export interface ActivityUpdatePayload {
-    id: string // ID самой ежедневной активности
+    activity_type_id: string // ID самой ежедневной активности
     value?: number
     goal?: number
     notes?: string | null

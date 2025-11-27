@@ -107,8 +107,10 @@ const saveChanges = async () => {
     if (!userActivityInfo.value) return
 
     await ActivityStore.updateUserDailyActivity({
-        id: userActivityInfo.value.id,
+        activity_type_id: userActivityInfo.value.id,
         value: currentProgress.value,
+        goal: userActivityInfo.value.goal,
+        notes: userActivityInfo.value.notes,
     })
 
     alert('Прогресс сохранен!')

@@ -1,5 +1,5 @@
 <template>
-    <div class="glass-container overflow-y-auto mt-8 p-4">
+    <div class="glass-container overflow-y-auto max-h-72 mt-8 p-4">
         <div class="grid grid-cols-1 gap-4">
             <userinfo-user-activity
                 v-for="activity in combinedActivities"

@@ -1,5 +1,5 @@
 <template>
-    <div class="glass-container absolute w-full bottom-4 z-10000">
+    <div class="glass-container fixed left-0 w-full bottom-4 z-10000">
         <navbar />
     </div>
     <slot />

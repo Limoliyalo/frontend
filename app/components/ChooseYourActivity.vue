@@ -36,10 +36,7 @@
 import { ref, watch } from 'vue'
 import { useActivitiesStore } from '~/stores/activities.store'
 import { useMyCharacterStore } from '~/stores/character.store'
-import type {
-    ActivityType,
-    ActivityCreatePayload,
-} from '~/types/activities/activities'
+import type { ActivityType } from '~/types/activities/activities'
 
 const activitiesStore = useActivitiesStore()
 const characterStore = useMyCharacterStore()
@@ -94,7 +91,10 @@ async function Submit() {
     }
 
     const promises = activitiesToSubmit.map(activity =>
-        activitiesStore.makeUserDailyActivity(activity)
+        activitiesStore.makeUserDailyActivity({
+            activity_type_id: activity.id,
+            goal: activity.goal,
+        })
     )
 
     try {
