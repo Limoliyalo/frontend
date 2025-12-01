@@ -12,11 +12,15 @@
             <div><Icon name="hugeicons:settings-05" size="32" /></div>
         </NuxtLink>
         <Register />
+        <div class="fixed inset-0 flex items-center justify-center z-10">
+            <ChooseYourActivity />
+        </div>
     </div>
 </template>
 
 <script lang="ts" setup>
 import lofiVideo from '~/assets/LoFi.mp4'
+import ChooseYourActivity from '~/components/ChooseYourActivity.vue'
 </script>
 
 <style>
