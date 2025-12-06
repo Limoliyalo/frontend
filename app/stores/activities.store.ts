@@ -5,6 +5,8 @@ import type {
     ActivityType,
     BaseActivity,
     DailyActivity,
+    DailyActivityCreate,
+    DailyActivityUpdate,
 } from '~/types/activities/activities'
 
 export const useActivitiesStore = defineStore('activities', () => {
@@ -27,14 +29,9 @@ export const useActivitiesStore = defineStore('activities', () => {
         )
         return color ? color.color : ''
     }
-    const getCurrentBaseActivity = computed(() => {
-        return (activityTypeId: string) => {
-            return baseActivities.value.find(
-                activity => activity.activity_type_id === activityTypeId
-            )
-        }
-    })
-
+    const getCurrentBaseActivity = (id: string): BaseActivity | undefined => {
+        return baseActivities.value.find(activity => activity.id === id)
+    }
     // Actions
     async function loadActivityTypesCatalog() {
         const { apiRequest } = useApi()
@@ -97,6 +94,78 @@ export const useActivitiesStore = defineStore('activities', () => {
         }
     }
 
+    async function loadCharacterDailyActivities(date?: string) {
+        const { apiRequest } = useApi()
+        try {
+            const day =
+                date ??
+                new Date().toISOString().split('T')[0] + 'T00:00:00.000Z'
+
+            dailyActivities.value = await apiRequest(
+                `/daily-activities/me?day=${day}`,
+                {
+                    method: 'GET',
+                }
+            )
+
+            console.log(
+                'Ежедневные активности персонажа успешно загружены:',
+                dailyActivities.value
+            )
+        } catch (error) {
+            console.error(
+                'Ошибка при загрузке ежедневных активностей персонажа:',
+                error
+            )
+        }
+    }
+
+    async function createCharacterDailyActivity(
+        dailyActivity: DailyActivityCreate
+    ) {
+        const { apiRequest } = useApi()
+        try {
+            await apiRequest('/daily-activities/me', {
+                method: 'POST',
+                body: JSON.stringify(dailyActivity),
+            })
+
+            console.log('Ежедневная активность персонажа успешно создана.')
+        } catch (error) {
+            console.error(
+                'Ошибка при создании ежедневной активности персонажа:',
+                error
+            )
+        }
+    }
+
+    async function updateCharacterDailyActivity(
+        dailyActivity: DailyActivityUpdate
+    ) {
+        const { apiRequest } = useApi()
+        try {
+            await apiRequest('/daily-activities/me', {
+                method: 'PATCH',
+                body: JSON.stringify(dailyActivity),
+            })
+
+            console.log('Ежедневная активность персонажа успешно обновлена.')
+        } catch (error) {
+            console.error(
+                'Ошибка при обновлении ежедневной активности персонажа:',
+                error
+            )
+        }
+    }
+
+    function getDailyActivityForType(activityTypeId: string, date: string) {
+        return dailyActivities.value.find(
+            daily =>
+                daily.activity_type_id === activityTypeId &&
+                daily.date.startsWith(date) // проверка на день
+        )
+    }
+
     return {
         loadActivityTypesCatalog,
         getActivityTypesCatalog,
@@ -106,5 +175,9 @@ export const useActivitiesStore = defineStore('activities', () => {
         getCharacterBaseActivityName,
         getCharacterBaseActivityColor,
         getCurrentBaseActivity,
+        loadCharacterDailyActivities,
+        createCharacterDailyActivity,
+        updateCharacterDailyActivity,
+        getDailyActivityForType,
     }
 })
