@@ -14,6 +14,26 @@ export const useActivitiesStore = defineStore('activities', () => {
 
     // Getters
     const getActivityTypesCatalog = computed(() => activityTypes.value)
+    const getCharacterBaseActivities = computed(() => baseActivities.value)
+    const getCharacterBaseActivityName = (activityTypeId: string) => {
+        const activity = activityTypes.value.find(
+            activity => activity.id === activityTypeId
+        )
+        return activity ? activity.name : ''
+    }
+    const getCharacterBaseActivityColor = (activityTypeId: string) => {
+        const color = activityTypes.value.find(
+            activity => activity.id === activityTypeId
+        )
+        return color ? color.color : ''
+    }
+    const getCurrentBaseActivity = computed(() => {
+        return (activityTypeId: string) => {
+            return baseActivities.value.find(
+                activity => activity.activity_type_id === activityTypeId
+            )
+        }
+    })
 
     // Actions
     async function loadActivityTypesCatalog() {
@@ -56,9 +76,35 @@ export const useActivitiesStore = defineStore('activities', () => {
         }
     }
 
+    async function loadCharacterBaseActivities() {
+        const { apiRequest } = useApi()
+        try {
+            baseActivities.value = await apiRequest(
+                '/base-character-activities/me',
+                {
+                    method: 'GET',
+                }
+            )
+            console.log(
+                'Базовые активности персонажа успешно загружены:',
+                baseActivities.value
+            )
+        } catch (error) {
+            console.error(
+                'Ошибка при загрузке базовых активностей персонажа:',
+                error
+            )
+        }
+    }
+
     return {
         loadActivityTypesCatalog,
         getActivityTypesCatalog,
         createCharacterBaseActivities,
+        loadCharacterBaseActivities,
+        getCharacterBaseActivities,
+        getCharacterBaseActivityName,
+        getCharacterBaseActivityColor,
+        getCurrentBaseActivity,
     }
 })

@@ -8,10 +8,12 @@
             ]"
             :background-color="['#bfdbfe', '#a7f3d0', '#fde68a']"
         />
-        <UserinfoUserActivities />
+        <CharacterBaseActivityList class="mt-5"/>
     </div>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import CharacterBaseActivityList from '~/components/userinfo/CharacterBaseActivityList.vue'
+</script>
 
 <style scoped></style>
