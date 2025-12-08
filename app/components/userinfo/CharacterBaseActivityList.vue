@@ -25,7 +25,12 @@
                         }}
                     </div>
                     <div>
-                        {{ activity.goal }}
+                        {{
+                            activitiesStore.getDailyActivityForType(
+                                activity.activity_type_id,
+                                today
+                            )?.value || 0
+                        }} / {{ activity.goal }}
                     </div>
                 </div>
             </NuxtLink>
@@ -40,11 +45,14 @@ import { useActivitiesStore } from '#imports'
 const activities = computed(
     () => activitiesStore.getCharacterBaseActivities || []
 )
+
 const activitiesStore = useActivitiesStore()
+const today = new Date().toISOString().split('T')[0] || '' // YYYY-MM-DD
 
 onMounted(async () => {
     await activitiesStore.loadActivityTypesCatalog()
     await activitiesStore.loadCharacterBaseActivities()
+    await activitiesStore.loadCharacterDailyActivities()
 })
 </script>
 

@@ -114,6 +114,7 @@ const applyChanges = async () => {
             notes: '',
         })
     }
+    alert('Изменения сохранены')
 }
 </script>
 

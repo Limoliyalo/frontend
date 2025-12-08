@@ -1,5 +1,6 @@
 <template>
     <div
+        v-if="activitiesStore.getCharacterBaseActivities.length === 0"
         class="glass-container h-[310px] w-[280px] flex flex-col p-4 rounded-lg"
     >
         <h2 class="text-2xl font-bold text-center mb-4 shrink-0">
@@ -43,6 +44,7 @@ const selectedActivities = computed(() =>
 
 onMounted(async () => {
     await activitiesStore.loadActivityTypesCatalog()
+    await activitiesStore.loadCharacterBaseActivities()
     for (const type of activityTypesCatalog.value) {
         if (!(type.id in checked.value)) {
             checked.value[type.id] = false
