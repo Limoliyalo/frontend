@@ -1,6 +1,5 @@
 <template>
     <div
-        v-if="activitiesStore.getCharacterBaseActivities.length === 0"
         class="glass-container h-[310px] w-[280px] flex flex-col p-4 rounded-lg"
     >
         <h2 class="text-2xl font-bold text-center mb-4 shrink-0">
@@ -41,6 +40,7 @@ const activityTypesCatalog = computed(
 const selectedActivities = computed(() =>
     Object.keys(checked.value).filter(id => checked.value[id])
 )
+const emit = defineEmits(['close'])
 
 onMounted(async () => {
     await activitiesStore.loadActivityTypesCatalog()
@@ -50,10 +50,14 @@ onMounted(async () => {
             checked.value[type.id] = false
         }
     }
+    if (activitiesStore.getCharacterBaseActivities.length > 0) {
+        emit('close')
+    }
 })
 
 function createBaseActivities() {
     activitiesStore.createCharacterBaseActivities(selectedActivities.value)
+    emit('close')
 }
 </script>
 

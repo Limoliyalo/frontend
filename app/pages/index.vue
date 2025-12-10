@@ -12,15 +12,25 @@
             <div><Icon name="hugeicons:settings-05" size="32" /></div>
         </NuxtLink>
         <Register />
-        <div class="fixed inset-0 flex items-center justify-center z-10">
-            <ChooseYourActivity />
+        <div
+            v-if="showModal"
+            class="fixed inset-0 flex items-center justify-center z-10"
+        >
+            <ChooseYourActivity @close="closeModal" />
         </div>
     </div>
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
 import lofiVideo from '~/assets/LoFi.mp4'
 import ChooseYourActivity from '~/components/ChooseYourActivity.vue'
+
+const showModal = ref(true)
+
+function closeModal() {
+    showModal.value = false
+}
 </script>
 
 <style>

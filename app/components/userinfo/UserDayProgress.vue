@@ -81,7 +81,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
     size: 120,
     strokeWidth: 10,
-    gapAngle: 3,
+    gapAngle: 2,
 })
 
 const radius = computed(() => (props.size / 2) * 0.8)
