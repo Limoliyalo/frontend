@@ -11,17 +11,31 @@
             class="relatve"
         >
             <div
-                class="h-[320px] w-40 p-4 rounded-lg glass-container-2 flex flex-col items-center justify-center [@media(max-height:595px)]:h-[240px] [@media(max-height:595px)]:w-32 [@media(max-height:595px)]:p-2"
+                class="h-[320px] w-40 p-4 rounded-lg glass-container-2 flex flex-col items-center justify-center relative overflow-hidden [@media(max-height:595px)]:h-[240px] [@media(max-height:595px)]:w-32 [@media(max-height:595px)]:p-2"
             >
-                <!-- <Icon
-                    :name="carouselItem.icon"
-                    class="w-32 h-32 mb-4 [@media(max-height:595px)]:w-24 [@media(max-height:595px)]:h-24 [@media(max-height:595px)]:mb-2"
-                /> -->
+                <div
+                    class="absolute inset-0 rounded-lg overflow-hidden"
+                >
+                    <img
+                        v-if="carouselItem.picture_url"
+                        :src="carouselItem.picture_url"
+                        :alt="carouselItem.name"
+                        class="w-full h-full object-fill"
+                    />
+                    <div
+                        v-else
+                        class="flex items-center justify-center text-gray-400 text-2xl w-full h-full bg-gray-900/30"
+                    >
+                        —
+                    </div>
+                </div>
                 <span
-                    class="text-2xl font-bold [@media(max-height:595px)]:text-xl"
+                    class="relative z-10 text-2xl font-bold px-3 py-1.5 rounded-md bg-gray-900/50 backdrop-blur-sm [@media(max-height:595px)]:text-xl"
                     >{{ carouselItem.name }}</span
                 >
-                <div class="absolute top-60 [@media(max-height:595px)]:top-40">
+                <div
+                    class="absolute top-60 z-10 px-3 py-2 rounded-lg bg-gray-900/50 backdrop-blur-sm [@media(max-height:595px)]:top-40"
+                >
                     <div
                         class="flex items-center justify-center"
                         v-if="!carouselItem.is_purchased"

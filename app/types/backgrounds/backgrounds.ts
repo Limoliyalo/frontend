@@ -3,6 +3,7 @@ export interface Background {
     description: string
     color: string
     cost: number
+    picture_url?: string | null
     required_level: number
     is_available: boolean
     id: string

@@ -8,23 +8,35 @@
             :key="shopItem.id"
             class="text-center relative"
         >
-            <div class="absolute top-0 right-1 z-10">
-                <!-- <Icon
+            <div
+                class="absolute top-0 right-1 z-10 rounded-full p-1 bg-gray-900/50 backdrop-blur-sm"
+            >
+                <Icon
                     :name="
-                        shopItem.is_favorite
+                        itemsStore.getCharacterItemByItemId(shopItem.id)
+                            ?.is_favorite
                             ? 'flat-color-icons:like'
                             : 'hugeicons:favourite'
                     "
-                    @click="itemsStore.toggleFavorite(shopItem.id)"
-                /> -->
+                    class="text-white"
+                    @click="itemsStore.toggleFavoriteCharacterItem(shopItem.id)"
+                />
             </div>
             <div
-                class="flex items-center justify-center p-4 border rounded-lg glass-container-2 h-28 [@media(max-height:595px)]:h-24 [@media(max-height:595px)]:p-2"
+                class="relative flex items-center justify-center p-4 border rounded-lg glass-container-2 h-28 [@media(max-height:595px)]:h-24 [@media(max-height:595px)]:p-2 overflow-hidden"
             >
-                <!-- <Icon
-                    :name="shopItem.icon"
-                    class="w-20 h-20 [@media(max-height:595px)]:w-16 [@media(max-height:595px)]:h-16"
-                /> -->
+                <img
+                    v-if="shopItem.picture_url"
+                    :src="shopItem.picture_url"
+                    :alt="shopItem.name"
+                    class="absolute inset-0 w-full h-full object-cover"
+                />
+                <div
+                    v-else
+                    class="flex items-center justify-center text-gray-400 text-2xl w-full h-full"
+                >
+                    —
+                </div>
             </div>
             <div>
                 <span class="text-xs text-center font-semibold mt-2">{{
@@ -32,33 +44,54 @@
                 }}</span>
             </div>
             <div
-                class="flex items-center justify-center"
-                v-if="!shopItem.is_purchased"
+                v-if="
+                    !itemsStore.getCharacterItemByItemId(shopItem.id)
+                        ?.is_purchased
+                "
             >
-                Цена: {{ shopItem.cost }}
+                <div class="flex items-center justify-center">
+                    Цена: {{ shopItem.cost }}
+                </div>
+                <UButton @click="buyItem(shopItem.id)" class="buy-button">
+                    Купить
+                </UButton>
             </div>
-
-            <div v-if="shopItem.is_purchased">
+            <div v-else>
                 <UButton
-                    v-if="!shopItem.is_active"
-                    @click="equip(shopItem.character_item_id)"
+                    v-if="
+                        !itemsStore.getCharacterItemByItemId(shopItem.id)
+                            ?.is_active
+                    "
+                    @click="
+                        equip(
+                            itemsStore.getCharacterItemByItemId(shopItem.id)
+                                ?.id
+                        )
+                    "
                 >
                     Надеть
                 </UButton>
-                <UButton v-else @click="unequip(shopItem.character_item_id)">
+                <UButton
+                    v-else
+                    @click="
+                        unequip(
+                            itemsStore.getCharacterItemByItemId(shopItem.id)
+                                ?.id
+                        )
+                    "
+                >
                     Снять
                 </UButton>
             </div>
-
-            <!-- Кнопка "Купить" использует shopItem.id -->
-            <UButton v-else @click="buyItem(shopItem.id)" class="buy-button">
-                Купить
-            </UButton>
         </div>
     </div>
 
     <div v-else class="text-center flex justify-center items-center">
-        У вас пока нет понравившихся предметов...
+        {{
+            isFavourite
+                ? 'У вас пока нет понравившихся предметов...'
+                : 'Нет подходящих товаров'
+        }}
     </div>
     <button
         class="text-center flex self-center justify-self-center"
@@ -69,10 +102,10 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useItemsStore } from '~/stores/items.store'
-import type { CharacterItem } from '~/types/items/items'
+import type { CharacterItem, Item } from '~/types/items/items'
 
 const props = defineProps({
     searchQuery: {
@@ -90,43 +123,20 @@ const props = defineProps({
 const itemsStore = useItemsStore()
 const { allItems, characterItems } = storeToRefs(itemsStore)
 
-const shopItemsWithStatus = computed(() => {
-    // Создаем Map, где ключ - это ID предмета (item_id),
-    // а значение - сам объект characterItem.
-    const characterItemsMap = new Map<string, CharacterItem>(
-        characterItems.value.map(charItem => [charItem.item_id, charItem])
-    )
-
-    return allItems.value.map(item => {
-        // Находим соответствующий купленный предмет
-        const charItem = characterItemsMap.get(item.id)
-
-        return {
-            ...item,
-            // Предмет куплен, если он есть в Map
-            is_purchased: !!charItem,
-            // Статус активности берем из найденного charItem
-            is_active: charItem ? charItem.is_active : false,
-            // ID для связи (character_item_id), который нужен для API
-            character_item_id: charItem ? charItem.id : null,
-        }
-    })
-})
-
+const items = computed<Item[]>(() => allItems.value)
+const charItems = computed<CharacterItem[]>(() => characterItems.value)
+const likedItems = computed<Item[]>(
+    () => itemsStore.getAllFavoriteCharacterItems
+)
+const nonFavoriteItems = computed<Item[]>(
+    () => itemsStore.getNonFavoriteCatalogItems
+)
 const filtredShopItems = computed(() => {
-    let items = shopItemsWithStatus.value
-
-    // if (props.isFavourite) {
-    //     items = items.filter(item => characterItems.is_favorite)
-    // }
-
-    if (props.searchQuery) {
-        items = items.filter(item =>
-            item.name.toLowerCase().includes(props.searchQuery.toLowerCase())
-        )
-    }
-
-    return items
+    const source = props.isFavourite ? likedItems.value : nonFavoriteItems.value
+    if (!props.searchQuery) return source
+    return source.filter(item =>
+        item.name.toLowerCase().includes(props.searchQuery.toLowerCase())
+    )
 })
 
 const buyItem = (itemId: string) => {
@@ -137,11 +147,11 @@ async function giveMeMoney() {
     await itemsStore.giveMeMoney(30)
 }
 
-async function equip(character_item_id: string | null) {
+async function equip(character_item_id: string | undefined) {
     if (!character_item_id) return
     await itemsStore.equipMyItem(character_item_id)
 }
-async function unequip(character_item_id: string | null) {
+async function unequip(character_item_id: string | undefined) {
     if (!character_item_id) return
     await itemsStore.unequipMyItem(character_item_id)
 }

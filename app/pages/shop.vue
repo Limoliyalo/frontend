@@ -17,7 +17,7 @@
                 </template>
             </UTabs>
             <div class="flex items-center justify-center">
-                баланс: {{ userStat?.balance }}
+                балансссс: {{ userStat?.balance }}
             </div>
         </div>
     </div>

@@ -5,6 +5,7 @@ export interface Item {
     cost: number
     required_level: number
     is_available: boolean
+    picture_url: string | null
     category_id: string
     created_at?: string
     updated_at?: string
@@ -15,8 +16,8 @@ export interface CharacterItem {
     item_id: string
     is_active: boolean
     is_favorite: boolean
+    is_purchased: boolean
     id: string
-    purchased_at: string
 }
 
 export interface ItemState {
