@@ -1,8 +1,9 @@
 <template>
     <div class="p-4 flex items-center justify-center">
         <UCarousel
+            v-if="filteredBackgrounds.length > 0"
             v-slot="{ item: carouselItem }"
-            :items="shopBackgroundsWithStatus"
+            :items="filteredBackgrounds"
             orientation="vertical"
             :ui="{
                 container:
@@ -13,6 +14,27 @@
             <div
                 class="h-[320px] w-40 p-4 rounded-lg glass-container-2 flex flex-col items-center justify-center relative overflow-hidden [@media(max-height:595px)]:h-[240px] [@media(max-height:595px)]:w-32 [@media(max-height:595px)]:p-2"
             >
+                <div
+                    class="absolute top-0 right-1 z-20 rounded-full p-1 bg-gray-900/50 backdrop-blur-sm"
+                >
+                    <Icon
+                        :name="
+                            carouselItem.is_favorite
+                                ? 'flat-color-icons:like'
+                                : 'hugeicons:favourite'
+                        "
+                        :class="
+                            carouselItem.is_favorite
+                                ? 'text-red-500'
+                                : 'text-white'
+                        "
+                        @click="
+                            backgroundsStore.toggleFavoriteCharacterBackground(
+                                carouselItem.id
+                            )
+                        "
+                    />
+                </div>
                 <div
                     class="absolute inset-0 rounded-lg overflow-hidden"
                 >
@@ -71,6 +93,16 @@
                 </div>
             </div>
         </UCarousel>
+        <div
+            v-else
+            class="text-center flex justify-center items-center h-[336px] [@media(max-height:595px)]:h-[260px]"
+        >
+            {{
+                isFavourite
+                    ? 'У вас пока нет понравившихся окружений...'
+                    : 'Нет подходящих окружений'
+            }}
+        </div>
     </div>
 </template>
 
@@ -79,6 +111,19 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import type { CharacterBackground } from '~/types/backgrounds/backgrounds'
+
+const props = defineProps({
+    searchQuery: {
+        type: String,
+        required: false,
+        default: '',
+    },
+    isFavourite: {
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+})
 
 const backgroundsStore = useMyBackgroundsStore()
 const { allBackgrounds, characterBackgrounds } = storeToRefs(backgroundsStore)
@@ -99,14 +144,29 @@ const shopBackgroundsWithStatus = computed(() => {
 
         return {
             ...item,
-            // Предмет куплен, если он есть в Map
-            is_purchased: !!charItem,
+            // Куплен только если есть запись и у неё указана дата покупки (лайк без покупки не считается)
+            is_purchased: !!(charItem && charItem.purchased_at),
             // Статус активности берем из найденного charItem
             is_active: charItem ? charItem.is_active : false,
+            // Избранное
+            is_favorite: charItem ? charItem.is_favorite : false,
             // ID для связи (character_item_id), который нужен для API
             character_item_id: charItem ? charItem.id : null,
         }
     })
+})
+
+const filteredBackgrounds = computed(() => {
+    const source = props.isFavourite
+        ? shopBackgroundsWithStatus.value.filter(b => b.is_favorite)
+        : shopBackgroundsWithStatus.value
+
+    const normalizedQuery = props.searchQuery.trim().toLowerCase()
+    if (!normalizedQuery) return source
+
+    return source.filter(background =>
+        background.name.toLowerCase().includes(normalizedQuery)
+    )
 })
 
 const buyItem = (itemId: string) => {

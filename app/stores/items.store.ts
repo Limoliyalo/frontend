@@ -161,6 +161,82 @@ export const useItemsStore = defineStore('itemsStore', {
                         }),
                     },
                 )
+
+                const existingIndex = this.characterItems.findIndex(
+                    charItem => charItem.item_id === item_id,
+                )
+                const existingItem =
+                    existingIndex >= 0
+                        ? this.characterItems[existingIndex]
+                        : null
+
+                if (
+                    updatedItem &&
+                    typeof updatedItem === 'object' &&
+                    'item_id' in updatedItem &&
+                    typeof updatedItem.item_id === 'string'
+                ) {
+                    const payload = updatedItem as Partial<
+                        (typeof this.characterItems)[number]
+                    > & { item_id: string }
+
+                    const targetIndex = this.characterItems.findIndex(
+                        charItem => charItem.item_id === payload.item_id,
+                    )
+
+                    if (targetIndex >= 0) {
+                        const currentItem = this.characterItems[targetIndex]
+                        if (!currentItem) return
+                        this.characterItems[targetIndex] = {
+                            ...currentItem,
+                            id:
+                                typeof payload.id === 'string'
+                                    ? payload.id
+                                    : currentItem.id,
+                            character_id:
+                                typeof payload.character_id === 'string'
+                                    ? payload.character_id
+                                    : currentItem.character_id,
+                            item_id: payload.item_id,
+                            is_active:
+                                typeof payload.is_active === 'boolean'
+                                    ? payload.is_active
+                                    : currentItem.is_active,
+                            is_purchased:
+                                typeof payload.is_purchased === 'boolean'
+                                    ? payload.is_purchased
+                                    : currentItem.is_purchased,
+                            is_favorite:
+                                typeof payload.is_favorite === 'boolean'
+                                    ? payload.is_favorite
+                                    : !currentItem.is_favorite,
+                        }
+                    } else if (
+                        typeof payload.id === 'string' &&
+                        typeof payload.character_id === 'string'
+                    ) {
+                        this.characterItems.push({
+                            character_id: payload.character_id,
+                            item_id: payload.item_id,
+                            is_active: !!payload.is_active,
+                            is_favorite:
+                                typeof payload.is_favorite === 'boolean'
+                                    ? payload.is_favorite
+                                    : true,
+                            is_purchased: !!payload.is_purchased,
+                            id: payload.id,
+                        })
+                    } else if (existingItem) {
+                        existingItem.is_favorite = !existingItem.is_favorite
+                    } else {
+                        await this.loadCharacterItems()
+                    }
+                } else if (existingItem) {
+                    existingItem.is_favorite = !existingItem.is_favorite
+                } else {
+                    await this.loadCharacterItems()
+                }
+
                 console.log('Предмет успешно добавлен/удален из избранного')
             } catch (error) {
                 console.error(

@@ -16,7 +16,8 @@ export interface CharacterBackground {
     is_active: boolean
     is_favorite: boolean
     id: string
-    purchased_at: string
+    /** Присутствует только у реально купленных фонов; при одном лайке записи нет */
+    purchased_at?: string | null
 }
 
 export interface BackgroundState {

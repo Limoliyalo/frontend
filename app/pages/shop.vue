@@ -13,11 +13,14 @@
                     />
                 </template>
                 <template #environments>
-                    <ShopEnvironments />
+                    <ShopEnvironments
+                        :search-query="searchQuery"
+                        :is-favourite="isFavourite"
+                    />
                 </template>
             </UTabs>
             <div class="flex items-center justify-center">
-                балансссс: {{ userStat?.balance }}
+                баланс: {{ userStat?.balance }}
             </div>
         </div>
     </div>

@@ -18,7 +18,12 @@
                             ? 'flat-color-icons:like'
                             : 'hugeicons:favourite'
                     "
-                    class="text-white"
+                    :class="
+                        itemsStore.getCharacterItemByItemId(shopItem.id)
+                            ?.is_favorite
+                            ? 'text-red-500'
+                            : 'text-white'
+                    "
                     @click="itemsStore.toggleFavoriteCharacterItem(shopItem.id)"
                 />
             </div>
@@ -102,10 +107,10 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useItemsStore } from '~/stores/items.store'
-import type { CharacterItem, Item } from '~/types/items/items'
+import type { Item } from '~/types/items/items'
 
 const props = defineProps({
     searchQuery: {
@@ -121,21 +126,18 @@ const props = defineProps({
 })
 
 const itemsStore = useItemsStore()
-const { allItems, characterItems } = storeToRefs(itemsStore)
+const { allItems } = storeToRefs(itemsStore)
 
 const items = computed<Item[]>(() => allItems.value)
-const charItems = computed<CharacterItem[]>(() => characterItems.value)
 const likedItems = computed<Item[]>(
     () => itemsStore.getAllFavoriteCharacterItems
 )
-const nonFavoriteItems = computed<Item[]>(
-    () => itemsStore.getNonFavoriteCatalogItems
-)
 const filtredShopItems = computed(() => {
-    const source = props.isFavourite ? likedItems.value : nonFavoriteItems.value
-    if (!props.searchQuery) return source
+    const source = props.isFavourite ? likedItems.value : items.value
+    const normalizedQuery = props.searchQuery.trim().toLowerCase()
+    if (!normalizedQuery) return source
     return source.filter(item =>
-        item.name.toLowerCase().includes(props.searchQuery.toLowerCase())
+        item.name.toLowerCase().includes(normalizedQuery)
     )
 })
 
