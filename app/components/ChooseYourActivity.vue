@@ -17,11 +17,19 @@
                 v-else
                 v-for="type in activityTypesCatalog"
                 :key="type.id"
-                class="p-3 mb-2 rounded-lg bg-white/10 hover:bg-white/20 cursor-pointer transition-colors flex justify-between items-center"
+                class="p-3 mb-2 rounded-lg flex justify-between items-center transition-colors"
+                :class="
+                    defaultActivityIds.includes(type.id)
+                        ? 'bg-white/10 opacity-90 cursor-default'
+                        : 'bg-white/10 hover:bg-white/20 cursor-pointer'
+                "
                 :style="{ background: type.color }"
             >
                 <span>{{ type.name }}</span>
-                <UCheckbox v-model="checked[type.id]" />
+                <UCheckbox
+                    v-model="checked[type.id]"
+                    :disabled="defaultActivityIds.includes(type.id)"
+                />
             </div>
             <UButton @click="createBaseActivities">Выбрать</UButton>
         </div>
@@ -37,6 +45,9 @@ const checked = ref<Record<string, boolean>>({})
 const activityTypesCatalog = computed(
     () => activitiesStore.getActivityTypesCatalog || []
 )
+const defaultActivityIds = computed(() =>
+    activityTypesCatalog.value.slice(0, 3).map(t => t.id)
+)
 const selectedActivities = computed(() =>
     Object.keys(checked.value).filter(id => checked.value[id])
 )
@@ -49,6 +60,9 @@ onMounted(async () => {
         if (!(type.id in checked.value)) {
             checked.value[type.id] = false
         }
+    }
+    for (const id of defaultActivityIds.value) {
+        checked.value[id] = true
     }
     if (activitiesStore.getCharacterBaseActivities.length > 0) {
         emit('close')
