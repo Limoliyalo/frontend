@@ -8,9 +8,14 @@
             muted
         ></video>
         <progress-bar class="absolute left-4 top-10" />
-        <NuxtLink to="/settings" class="absolute top-7 right-2 z-10">
-            <div><Icon name="hugeicons:settings-05" size="32" /></div>
-        </NuxtLink>
+        <div class="absolute top-7 right-2 z-10 flex flex-col items-center gap-2">
+            <NuxtLink to="/settings">
+                <div><Icon name="hugeicons:settings-05" size="32" /></div>
+            </NuxtLink>
+            <NuxtLink to="/friends">
+                <div><Icon name="hugeicons:add-team" size="32" /></div>
+            </NuxtLink>
+        </div>
         <Register />
         <div
             v-if="showModal"

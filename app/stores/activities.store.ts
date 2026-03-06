@@ -187,6 +187,8 @@ export const useActivitiesStore = defineStore('activities', () => {
         )
     }
 
+    
+
     return {
         loadActivityTypesCatalog,
         getActivityTypesCatalog,
