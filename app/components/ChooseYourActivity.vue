@@ -45,8 +45,8 @@ const checked = ref<Record<string, boolean>>({})
 const activityTypesCatalog = computed(
     () => activitiesStore.getActivityTypesCatalog || []
 )
-const defaultActivityIds = computed(() =>
-    activityTypesCatalog.value.slice(0, 3).map(t => t.id)
+const defaultActivityIds = computed(
+    () => activitiesStore.getDefaultActivityTypeIds
 )
 const selectedActivities = computed(() =>
     Object.keys(checked.value).filter(id => checked.value[id])

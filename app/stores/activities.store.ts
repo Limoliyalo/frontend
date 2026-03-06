@@ -32,8 +32,29 @@ export const useActivitiesStore = defineStore('activities', () => {
     const getCurrentBaseActivity = (id: string): BaseActivity | undefined => {
         return baseActivities.value.find(activity => activity.id === id)
     }
+
+    /** Find activity type id by name (case-insensitive, trimmed). */
+    const getActivityTypeIdByName = (name: string): string | undefined => {
+        const normalized = name.trim().toLowerCase()
+        const type = activityTypes.value.find(
+            t => t.name.trim().toLowerCase() === normalized
+        )
+        return type?.id
+    }
+
+    /** Default activity type names for profile circles and choice screen. */
+    const DEFAULT_ACTIVITY_NAMES = ['water', 'food', 'exercise'] as const
+
+    /** Ids of default activity types (water, food, exercise) from catalog. */
+    const getDefaultActivityTypeIds = computed(() =>
+        DEFAULT_ACTIVITY_NAMES.map(name => getActivityTypeIdByName(name)).filter(
+            (id): id is string => id != null
+        )
+    )
+
     // Actions
     async function loadActivityTypesCatalog() {
+        if (activityTypes.value.length > 0) return
         const { apiRequest } = useApi()
         try {
             const data: ActivityType[] = await apiRequest(
@@ -169,6 +190,8 @@ export const useActivitiesStore = defineStore('activities', () => {
     return {
         loadActivityTypesCatalog,
         getActivityTypesCatalog,
+        getActivityTypeIdByName,
+        getDefaultActivityTypeIds,
         createCharacterBaseActivities,
         loadCharacterBaseActivities,
         getCharacterBaseActivities,

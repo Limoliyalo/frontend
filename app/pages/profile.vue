@@ -49,19 +49,29 @@ const exercisePercentage = computed(() => {
 })
 
 onMounted(async () => {
+    await activityStore.loadActivityTypesCatalog()
     await activityStore.loadCharacterDailyActivities()
-    foodprogress.value = activityStore.getDailyActivityForType(
-        '9da5fef5-996f-4984-9fd8-b2ecabff250c',
-        today
-    )
-    exerciseprogress.value = activityStore.getDailyActivityForType(
-        'b8bfe9b6-e561-4774-b0a4-356273b09903',
-        today
-    )
-    waterprogress.value = activityStore.getDailyActivityForType(
-        'dfd67767-301b-4304-9aca-e0f720383bbb',
-        today
-    )
+    const foodId = activityStore.getActivityTypeIdByName('food')
+    const exerciseId = activityStore.getActivityTypeIdByName('exercise')
+    const waterId = activityStore.getActivityTypeIdByName('water')
+    if (foodId) {
+        foodprogress.value = activityStore.getDailyActivityForType(
+            foodId,
+            today,
+        )
+    }
+    if (exerciseId) {
+        exerciseprogress.value = activityStore.getDailyActivityForType(
+            exerciseId,
+            today,
+        )
+    }
+    if (waterId) {
+        waterprogress.value = activityStore.getDailyActivityForType(
+            waterId,
+            today,
+        )
+    }
 })
 </script>
 
