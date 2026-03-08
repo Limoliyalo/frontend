@@ -144,8 +144,8 @@ const shopBackgroundsWithStatus = computed(() => {
 
         return {
             ...item,
-            // Куплен только если есть запись и у неё указана дата покупки (лайк без покупки не считается)
-            is_purchased: !!(charItem && charItem.purchased_at),
+            // Покупка определяется нормализованным флагом из стора.
+            is_purchased: charItem ? charItem.is_purchased : false,
             // Статус активности берем из найденного charItem
             is_active: charItem ? charItem.is_active : false,
             // Избранное

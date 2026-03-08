@@ -15,8 +15,9 @@ export interface CharacterBackground {
     background_id: string
     is_active: boolean
     is_favorite: boolean
+    is_purchased: boolean
     id: string
-    /** Присутствует только у реально купленных фонов; при одном лайке записи нет */
+    /** Сервер может присылать timestamp покупки, но UI опирается на is_purchased. */
     purchased_at?: string | null
 }
 
