@@ -113,12 +113,12 @@ export const useItemsStore = defineStore('itemsStore', {
         async equipMyItem(character_item_id: string) {
             const { apiRequest } = useApi()
             try {
-                await apiRequest(
-                    `/character-items/me/${character_item_id}/equip`,
-                    {
-                        method: 'PATCH',
-                    },
-                )
+                await apiRequest('/character-items/me/equip', {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        character_item_id,
+                    }),
+                })
                 console.log('Предмет успешно экипирован')
                 const equippedItem = this.characterItems.find(
                     item => item.id === character_item_id,
@@ -132,12 +132,12 @@ export const useItemsStore = defineStore('itemsStore', {
         async unequipMyItem(character_item_id: string) {
             const { apiRequest } = useApi()
             try {
-                await apiRequest(
-                    `/character-items/me/${character_item_id}/unequip`,
-                    {
-                        method: 'PATCH',
-                    },
-                )
+                await apiRequest('/character-items/me/unequip', {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        character_item_id,
+                    }),
+                })
                 console.log('Предмет успешно снят с экипировки')
                 const itemToUnequip = this.characterItems.find(
                     item => item.id === character_item_id,
