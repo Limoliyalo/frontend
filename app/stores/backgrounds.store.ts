@@ -6,11 +6,25 @@ export const useMyBackgroundsStore = defineStore('backgroundsStore', {
     state: (): BackgroundState => ({
         backgrounds: [],
         characterBackgrounds: [],
+        activeBackgroundForHome: null,
     }),
     getters: {
         allBackgrounds: state => state.backgrounds,
     },
     actions: {
+        updateActiveBackgroundForHome() {
+            const activeChar = this.characterBackgrounds.find(
+                cb => cb.is_active === true,
+            )
+            if (!activeChar) {
+                this.activeBackgroundForHome = null
+                return
+            }
+            const fromCatalog = this.backgrounds.find(
+                b => b.id === activeChar.background_id,
+            )
+            this.activeBackgroundForHome = fromCatalog ?? null
+        },
         async loadBackgroundsCatalog() {
             const { apiRequest } = useApi()
             try {
@@ -18,6 +32,7 @@ export const useMyBackgroundsStore = defineStore('backgroundsStore', {
                     method: 'GET',
                 })
                 this.backgrounds = data
+                this.updateActiveBackgroundForHome()
                 console.log('Каталог фонов успешно загружен:', data)
             } catch (error) {
                 console.error('Ошибка при загрузке каталога фонов:', error)
@@ -31,6 +46,7 @@ export const useMyBackgroundsStore = defineStore('backgroundsStore', {
                     method: 'GET',
                 })
                 this.characterBackgrounds = data
+                this.updateActiveBackgroundForHome()
                 console.log('Пользовательские Фоны успешно загружены:', data)
             } catch (error) {
                 console.error(
@@ -90,6 +106,7 @@ export const useMyBackgroundsStore = defineStore('backgroundsStore', {
                     }
                 })
                 char.is_active = true
+                this.updateActiveBackgroundForHome()
             } catch (error) {
                 console.error('Ошибка при экипировке Фона:', error)
             }
@@ -108,6 +125,7 @@ export const useMyBackgroundsStore = defineStore('backgroundsStore', {
                 })
                 console.log('Фон успешно снят с экипировки')
                 char.is_active = false
+                this.updateActiveBackgroundForHome()
             } catch (error) {
                 console.error('Ошибка при снятии с экипировки Фона:', error)
             }

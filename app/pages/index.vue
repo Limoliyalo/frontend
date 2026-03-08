@@ -1,7 +1,14 @@
 <template>
     <div>
+        <img
+            v-if="activeBackgroundForHome?.picture_url"
+            class="fullscreen-bg"
+            :src="activeBackgroundForHome.picture_url"
+            :alt="activeBackgroundForHome.name"
+        />
         <video
-            class="fullscreen-video"
+            v-else
+            class="fullscreen-bg"
             :src="lofiVideo"
             autoplay
             loop
@@ -27,25 +34,37 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import lofiVideo from '~/assets/LoFi.mp4'
 import ChooseYourActivity from '~/components/ChooseYourActivity.vue'
+import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
+
+const backgroundsStore = useMyBackgroundsStore()
+const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
 
 const showModal = ref(true)
 
 function closeModal() {
     showModal.value = false
 }
+
+onMounted(async () => {
+    await Promise.all([
+        backgroundsStore.loadBackgroundsCatalog(),
+        backgroundsStore.loadCharacterBackgrounds(),
+    ])
+})
 </script>
 
 <style>
-.fullscreen-video {
+.fullscreen-bg {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     object-fit: fill;
-    z-index: -1; /* Optional: Keeps video in the background */
+    z-index: -1;
 }
 </style>

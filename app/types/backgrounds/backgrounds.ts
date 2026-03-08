@@ -23,4 +23,6 @@ export interface CharacterBackground {
 export interface BackgroundState {
     backgrounds: Background[]
     characterBackgrounds: CharacterBackground[]
+    /** Кэш окружения для главного экрана (is_active). Обновляется при загрузке и при equip/unequip. */
+    activeBackgroundForHome: Background | null
 }
