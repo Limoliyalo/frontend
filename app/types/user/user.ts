@@ -40,3 +40,12 @@ export interface userSettings {
     created_at: string
     updated_at: string
 }
+
+export interface baseUser {
+    telegram_id: number
+    is_active: boolean
+    balance: number
+    password_hash: string
+    created_at: string
+    updated_at: string
+}

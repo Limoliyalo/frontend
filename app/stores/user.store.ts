@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import { useApi } from '#imports'
-import type { TelegramUser, UserState, userSettings } from '~/types/user/user'
+import type {
+    TelegramUser,
+    UserState,
+    userSettings,
+    baseUser,
+} from '~/types/user/user'
 
 export const useMyUserStore = defineStore('myUserStore', {
     state: (): UserState => ({
@@ -38,7 +43,7 @@ export const useMyUserStore = defineStore('myUserStore', {
             localStorage.setItem('tg_initData', initData)
             console.log(
                 'Пользователь Telegrammmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm:',
-                user
+                user,
             )
         },
 
@@ -65,12 +70,12 @@ export const useMyUserStore = defineStore('myUserStore', {
                 })
                 console.log(
                     'userStat.valueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                    this.statistic
+                    this.statistic,
                 )
             } catch (error) {
                 console.log(
                     'Не удалось загрузить статистику пользователя',
-                    error
+                    error,
                 )
             }
         },
@@ -82,12 +87,12 @@ export const useMyUserStore = defineStore('myUserStore', {
                 })
                 console.log(
                     'userSettings.valueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                    this.settings
+                    this.settings,
                 )
             } catch (error: any) {
                 if (error.message && error.message.includes('404')) {
                     console.log(
-                        'Настройки пользователя не найдены. Создание настроек по умолчанию.'
+                        'Настройки пользователя не найдены. Создание настроек по умолчанию.',
                     )
                     try {
                         await this.updateUserSettings({
@@ -97,18 +102,18 @@ export const useMyUserStore = defineStore('myUserStore', {
                             do_not_disturb: false,
                         })
                         console.log(
-                            'Настройки по умолчанию успешно созданы и загружены.'
+                            'Настройки по умолчанию успешно созданы и загружены.',
                         )
                     } catch (patchError) {
                         console.error(
                             'Не удалось создать настройки по умолчанию:',
-                            patchError
+                            patchError,
                         )
                     }
                 } else {
                     console.log(
                         'Не удалось загрузить настройки пользователя',
-                        error
+                        error,
                     )
                 }
             }
@@ -124,12 +129,12 @@ export const useMyUserStore = defineStore('myUserStore', {
                 this.settings = updatedSettings
                 console.log(
                     'Настройки пользователя успешно обновлены',
-                    this.settings
+                    this.settings,
                 )
             } catch (error) {
                 console.error(
                     'Не удалось обновить настройки пользователя',
-                    error
+                    error,
                 )
                 // Здесь можно добавить логику отката изменений, если нужно
             }
@@ -145,7 +150,34 @@ export const useMyUserStore = defineStore('myUserStore', {
             } catch (error) {
                 console.error(
                     'Не удалось удалить настройки пользователя',
-                    error
+                    error,
+                )
+            }
+        },
+        async registerUser(): Promise<void> {
+            const { apiRequest } = useApi()
+            try {
+                await apiRequest('/users/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        telegram_id: this.getUserId,
+                    }),
+                })
+            } catch (error) {
+                console.error('Не удалось зарегистрировать пользователя', error)
+            }
+        },
+        async currentUser(): Promise<baseUser | undefined> {
+            const { apiRequest } = useApi()
+            try {
+                const user = await apiRequest('/users/me', {
+                    method: 'GET',
+                })
+                return user
+            } catch (error) {
+                console.error(
+                    'Не удалось загрузить текущего пользователя',
+                    error,
                 )
             }
         },
