@@ -13,6 +13,9 @@ export interface userStat {
     friends_count: number
 }
 
+/** Alias for userStat (PascalCase). */
+export type UserStatistic = userStat
+
 export interface TelegramUser {
     id: number
     first_name: string

@@ -1,34 +1,36 @@
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 import { useApi } from '#imports'
-import type { CategoryState } from '~/types/categories/categories'
+import type { Category } from '~/types/categories/categories'
 
-export const useCategoriesStore = defineStore('categoriesStore', {
-    state: (): CategoryState => ({
-        categories: [],
-        isLoading: false,
-    }),
-    getters: {
-        allCategories: state => state.categories,
-        getCategoryById: state => {
-            return (id: string) => state.categories.find(c => c.id === id)
-        },
-    },
-    actions: {
-        async loadCategories() {
-            const { apiRequest } = useApi()
-            this.isLoading = true
+export const useCategoriesStore = defineStore('categoriesStore', () => {
+    const { apiRequest } = useApi()
 
-            try {
-                const data = await apiRequest('/item-categories/catalog', {
-                    method: 'GET',
-                })
-                this.categories = data
-                console.log('Категории предметов успешно загружены:', data)
-            } catch (error) {
-                console.error('Ошибка при загрузке категорий предметов:', error)
-            } finally {
-                this.isLoading = false
-            }
-        },
-    },
+    const categories = ref<Category[]>([])
+    const isLoading = ref(false)
+
+    const allCategories = computed<Category[]>(() => categories.value)
+
+    const getCategoryById = (id: string): Category | undefined =>
+        categories.value.find(c => c.id === id)
+
+    async function loadCategories(): Promise<void> {
+        isLoading.value = true
+        try {
+            categories.value = await apiRequest<Category[]>(
+                '/item-categories/catalog',
+                { method: 'GET' },
+            )
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    return {
+        categories,
+        isLoading,
+        allCategories,
+        getCategoryById,
+        loadCategories,
+    }
 })

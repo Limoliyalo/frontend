@@ -67,7 +67,7 @@ const registerUser = async () => {
         const response = await apiRequest('/users/register', {
             method: 'POST',
             body: JSON.stringify({
-                telegram_id: userStore.getUserId,
+                telegram_id: userStore.userId,
                 password: '1234565',
             }),
         })
@@ -79,13 +79,10 @@ const registerUser = async () => {
 }
 
 const handleSubmit = async () => {
-    const success = await characterStore.createCharacter(
-        characterName.value,
-        gender.value
-    )
-    if (success) {
+    try {
+        await characterStore.createCharacter(characterName.value, gender.value)
         alert('Персонаж успешно создан!')
-    } else {
+    } catch {
         alert('Ошибка создания персонажа')
     }
 }

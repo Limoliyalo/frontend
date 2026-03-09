@@ -24,7 +24,7 @@
                             ? 'text-red-500'
                             : 'text-white'
                     "
-                    @click="itemsStore.toggleFavoriteCharacterItem(shopItem.id)"
+                    @click="itemsStore.toggleFavoriteItem(shopItem.id)"
                 />
             </div>
             <div
@@ -130,7 +130,7 @@ const { allItems } = storeToRefs(itemsStore)
 
 const items = computed<Item[]>(() => allItems.value)
 const likedItems = computed<Item[]>(
-    () => itemsStore.getAllFavoriteCharacterItems
+   () => itemsStore.favoriteItems
 )
 const filtredShopItems = computed(() => {
     const source = props.isFavourite ? likedItems.value : items.value
@@ -150,12 +150,12 @@ async function giveMeMoney() {
 }
 
 async function equip(character_item_id: string | undefined) {
-    if (!character_item_id) return
-    await itemsStore.equipMyItem(character_item_id)
+   if (!character_item_id) return
+   await itemsStore.equipItem(character_item_id)
 }
 async function unequip(character_item_id: string | undefined) {
-    if (!character_item_id) return
-    await itemsStore.unequipMyItem(character_item_id)
+   if (!character_item_id) return
+   await itemsStore.unequipItem(character_item_id)
 }
 </script>
 

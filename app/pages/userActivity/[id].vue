@@ -4,7 +4,7 @@
         <h1 v-if="currentBaseActivity" class="text-3xl font-bold text-white">
             Название Активности
             {{
-                activitiesStore.getCharacterBaseActivityName(
+                activitiesStore.getActivityTypeName(
                     currentBaseActivity?.activity_type_id
                 )
             }}
@@ -58,7 +58,7 @@ import { useActivitiesStore, onMounted } from '#imports'
 const activitiesStore = useActivitiesStore()
 const route = useRoute()
 const baseActivityID = ref(route.params.id)
-const currentBaseActivity = activitiesStore.getCurrentBaseActivity(
+const currentBaseActivity = activitiesStore.getBaseActivity(
     baseActivityID.value as string
 )!
 const progressValue = ref(0)

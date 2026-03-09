@@ -18,8 +18,9 @@ export default defineNuxtPlugin(async () => {
 
         if (user && initData) {
             userStore.setUser(user, initData)
-            const baseUser = await userStore.currentUser()
-            if (!baseUser) {
+            try {
+                await userStore.fetchCurrentUser()
+            } catch {
                 await userStore.registerUser()
             }
         } else {

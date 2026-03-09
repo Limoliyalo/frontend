@@ -1,185 +1,149 @@
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 import { useApi } from '#imports'
 import type {
     TelegramUser,
-    UserState,
+    userStat,
     userSettings,
     baseUser,
 } from '~/types/user/user'
 
-export const useMyUserStore = defineStore('myUserStore', {
-    state: (): UserState => ({
-        user: null,
-        initData: null,
-        statistic: null,
-        settings: null,
-    }),
-    getters: {
-        isAuthorized: state => !!state.user && !!state.initData,
-        getUser: (state: UserState) => state.user,
-        getUserId: (state: UserState) => state.user?.id,
-        getUsername: (state: UserState) => state.user?.username || null,
-        getFirstName: (state: UserState) => state.user?.first_name || null,
-        getLastName: (state: UserState) => state.user?.last_name || null,
-        getFullName: (state: UserState) => {
-            if (!state.user) return ''
-            const firstName = state.user.first_name || ''
-            const lastName = state.user.last_name || ''
-            return [firstName, lastName].filter(Boolean).join(' ')
-        },
-        getLanguageCode: (state: UserState) =>
-            state.user?.language_code || null,
-        isPremium: (state: UserState) => state.user?.is_premium || false,
-        getPhotoUrl: (state: UserState) => state.user?.photo_url || null,
-        getStatistic: (state: UserState) => state.statistic,
-        getInitData: (state: UserState) => state.initData,
-        getSettings: (state: UserState) => state.settings,
-    },
-    actions: {
-        setUser(user: TelegramUser, initData: string) {
-            this.user = user
-            this.initData = initData
-            localStorage.setItem('tg_user', JSON.stringify(user))
-            localStorage.setItem('tg_initData', initData)
-            console.log(
-                'Пользователь Telegrammmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm:',
-                user,
+const DEFAULT_SETTINGS: Pick<
+    userSettings,
+    'quiet_start_time' | 'quiet_end_time' | 'muted_days' | 'do_not_disturb'
+> = {
+    quiet_start_time: '00:00:00',
+    quiet_end_time: '00:00:00',
+    muted_days: [],
+    do_not_disturb: false,
+}
+
+const STORAGE_KEYS = {
+    user: 'tg_user',
+    initData: 'tg_initData',
+} as const
+
+export const useMyUserStore = defineStore('myUserStore', () => {
+    const { apiRequest } = useApi()
+
+    const user = ref<TelegramUser | null>(null)
+    const initData = ref<string | null>(null)
+    const statistic = ref<userStat | null>(null)
+    const settings = ref<userSettings | null>(null)
+
+    const isAuthorized = computed<boolean>(
+        () => !!user.value && !!initData.value,
+    )
+
+    const userId = computed(() => user.value?.id)
+    const username = computed(() => user.value?.username ?? null)
+    const firstName = computed(() => user.value?.first_name ?? null)
+    const lastName = computed(() => user.value?.last_name ?? null)
+    const languageCode = computed(() => user.value?.language_code ?? null)
+    const isPremium = computed(() => user.value?.is_premium ?? false)
+    const photoUrl = computed(() => user.value?.photo_url ?? null)
+
+    const fullName = computed<string>(() => {
+        if (!user.value) return ''
+        return [user.value.first_name, user.value.last_name]
+            .filter(Boolean)
+            .join(' ')
+    })
+
+    function setUser(telegramUser: TelegramUser, data: string): void {
+        user.value = telegramUser
+        initData.value = data
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(telegramUser))
+        localStorage.setItem(STORAGE_KEYS.initData, data)
+    }
+
+    function loadFromStorage(): void {
+        const cachedUser = localStorage.getItem(STORAGE_KEYS.user)
+        const cachedInitData = localStorage.getItem(STORAGE_KEYS.initData)
+        if (cachedUser && cachedInitData) {
+            user.value = JSON.parse(cachedUser)
+            initData.value = cachedInitData
+        }
+    }
+
+    function clear(): void {
+        user.value = null
+        initData.value = null
+        localStorage.removeItem(STORAGE_KEYS.user)
+        localStorage.removeItem(STORAGE_KEYS.initData)
+    }
+
+    async function registerUser(): Promise<void> {
+        await apiRequest('/users/register', {
+            method: 'POST',
+            body: JSON.stringify({ telegram_id: userId.value }),
+        })
+    }
+
+    async function fetchCurrentUser(): Promise<baseUser> {
+        return apiRequest<baseUser>('/users/me', { method: 'GET' })
+    }
+
+    async function loadUserStatistic(): Promise<void> {
+        statistic.value = await apiRequest<userStat>('/users/me/statistics', {
+            method: 'GET',
+        })
+    }
+
+    async function updateUserSettings(
+        patch: Partial<userSettings>,
+    ): Promise<void> {
+        settings.value = await apiRequest<userSettings>('/user-settings/me', {
+            method: 'PATCH',
+            body: JSON.stringify(patch),
+        })
+    }
+
+    async function loadUserSettings(): Promise<void> {
+        try {
+            settings.value = await apiRequest<userSettings>(
+                '/user-settings/me',
+                { method: 'GET' },
             )
-        },
+        } catch (error: unknown) {
+            const is404 =
+                error instanceof Error && error.message.includes('404')
 
-        loadFromStorage() {
-            const cachedUser = localStorage.getItem('tg_user')
-            const cachedInitData = localStorage.getItem('tg_initData')
-            if (cachedUser && cachedInitData) {
-                this.user = JSON.parse(cachedUser)
-                this.initData = cachedInitData
-            }
-        },
-        clear() {
-            this.user = null
-            this.initData = ''
-            localStorage.removeItem('tg_user')
-            localStorage.removeItem('tg_initData')
-        },
+            if (!is404) throw error
 
-        async loadUserStatistic() {
-            const { apiRequest } = useApi()
-            try {
-                this.statistic = await apiRequest('/users/me/statistics', {
-                    method: 'GET',
-                })
-                console.log(
-                    'userStat.valueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                    this.statistic,
-                )
-            } catch (error) {
-                console.log(
-                    'Не удалось загрузить статистику пользователя',
-                    error,
-                )
-            }
-        },
-        async loadUserSettings() {
-            const { apiRequest } = useApi()
-            try {
-                this.settings = await apiRequest('/user-settings/me', {
-                    method: 'GET',
-                })
-                console.log(
-                    'userSettings.valueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                    this.settings,
-                )
-            } catch (error: any) {
-                if (error.message && error.message.includes('404')) {
-                    console.log(
-                        'Настройки пользователя не найдены. Создание настроек по умолчанию.',
-                    )
-                    try {
-                        await this.updateUserSettings({
-                            quiet_start_time: '00:00:00',
-                            quiet_end_time: '00:00:00',
-                            muted_days: [],
-                            do_not_disturb: false,
-                        })
-                        console.log(
-                            'Настройки по умолчанию успешно созданы и загружены.',
-                        )
-                    } catch (patchError) {
-                        console.error(
-                            'Не удалось создать настройки по умолчанию:',
-                            patchError,
-                        )
-                    }
-                } else {
-                    console.log(
-                        'Не удалось загрузить настройки пользователя',
-                        error,
-                    )
-                }
-            }
-        },
-        async updateUserSettings(newSettings: Partial<userSettings>) {
-            const { apiRequest } = useApi()
-            try {
-                const updatedSettings = await apiRequest('/user-settings/me', {
-                    method: 'PATCH', // Используем PATCH для обновления
-                    body: JSON.stringify(newSettings),
-                })
-                // После успешного ответа сервера, обновляем состояние в хранилище
-                this.settings = updatedSettings
-                console.log(
-                    'Настройки пользователя успешно обновлены',
-                    this.settings,
-                )
-            } catch (error) {
-                console.error(
-                    'Не удалось обновить настройки пользователя',
-                    error,
-                )
-                // Здесь можно добавить логику отката изменений, если нужно
-            }
-        },
-        async deleteUserSettings() {
-            const { apiRequest } = useApi()
-            try {
-                await apiRequest('/user-settings/me', {
-                    method: 'DELETE',
-                })
-                this.settings = null
-                console.log('Настройки пользователя успешно удалены')
-            } catch (error) {
-                console.error(
-                    'Не удалось удалить настройки пользователя',
-                    error,
-                )
-            }
-        },
-        async registerUser(): Promise<void> {
-            const { apiRequest } = useApi()
-            try {
-                await apiRequest('/users/register', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        telegram_id: this.getUserId,
-                    }),
-                })
-            } catch (error) {
-                console.error('Не удалось зарегистрировать пользователя', error)
-            }
-        },
-        async currentUser(): Promise<baseUser | undefined> {
-            const { apiRequest } = useApi()
-            try {
-                const user = await apiRequest('/users/me', {
-                    method: 'GET',
-                })
-                return user
-            } catch (error) {
-                console.error(
-                    'Не удалось загрузить текущего пользователя',
-                    error,
-                )
-            }
-        },
-    },
+            await updateUserSettings(DEFAULT_SETTINGS)
+        }
+    }
+
+    async function deleteUserSettings(): Promise<void> {
+        await apiRequest('/user-settings/me', { method: 'DELETE' })
+        settings.value = null
+    }
+
+    return {
+        user,
+        initData,
+        statistic,
+        settings,
+
+        isAuthorized,
+        userId,
+        username,
+        firstName,
+        lastName,
+        fullName,
+        languageCode,
+        isPremium,
+        photoUrl,
+
+        setUser,
+        loadFromStorage,
+        clear,
+        registerUser,
+        fetchCurrentUser,
+        loadUserStatistic,
+        loadUserSettings,
+        updateUserSettings,
+        deleteUserSettings,
+    }
 })

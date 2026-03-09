@@ -9,7 +9,7 @@ import { useMyUserStore } from '../../../stores/user.store'
 const userStore = useMyUserStore()
 
 // Используем computed для реактивности и безопасного доступа
-const user = computed(() => userStore.getUser)
+const user = computed(() => userStore.user)
 </script>
 
 <style></style>

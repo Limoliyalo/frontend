@@ -16,7 +16,7 @@ const userStore = useMyUserStore()
 
 onMounted(async () => {
     await userStore.loadUserStatistic()
-    userStat.value = userStore.getStatistic
+    userStat.value = userStore.statistic
 })
 </script>
 

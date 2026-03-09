@@ -36,7 +36,7 @@ const userStore = useMyUserStore()
 const itemsStore = useItemsStore()
 const backgroundsStore = useMyBackgroundsStore()
 
-const userStat = computed(() => userStore.getStatistic)
+const userStat = computed(() => userStore.statistic)
 
 const tabItems = [
     {

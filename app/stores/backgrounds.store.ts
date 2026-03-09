@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 import { useApi } from '#imports'
 import { useMyUserStore } from '~/stores/user.store'
 import type {
+    Background,
     BackgroundState,
     CharacterBackground,
 } from '~/types/backgrounds/backgrounds'
@@ -16,172 +18,136 @@ const mergeCharacterBackground = (
     is_favorite: patch.is_favorite ?? current.is_favorite,
 })
 
-export const useMyBackgroundsStore = defineStore('backgroundsStore', {
-    state: (): BackgroundState => ({
-        backgrounds: [],
-        characterBackgrounds: [],
-        activeBackgroundForHome: null,
-    }),
+export const useMyBackgroundsStore = defineStore('backgroundsStore', () => {
+    const { apiRequest } = useApi()
 
-    getters: {
-        allBackgrounds: state => state.backgrounds,
-    },
+    const backgrounds = ref<Background[]>([])
+    const characterBackgrounds = ref<CharacterBackground[]>([])
+    const activeBackgroundForHome = ref<Background | null>(null)
 
-    actions: {
-        updateActiveBackgroundForHome() {
-            const active = this.characterBackgrounds.find(cb => cb.is_active)
-            this.activeBackgroundForHome = active
-                ? (this.backgrounds.find(b => b.id === active.background_id) ??
-                  null)
-                : null
-        },
+    const allBackgrounds = computed<Background[]>(() => backgrounds.value)
 
-        async loadBackgroundsCatalog() {
-            const { apiRequest } = useApi()
-            try {
-                this.backgrounds = await apiRequest('/backgrounds/catalog', {
-                    method: 'GET',
-                })
-                this.updateActiveBackgroundForHome()
-            } catch (error) {
-                console.error('Ошибка при загрузке каталога фонов:', error)
-            }
-        },
+    function updateActiveBackgroundForHome(): void {
+        const active = characterBackgrounds.value.find(cb => cb.is_active)
+        activeBackgroundForHome.value = active
+            ? (backgrounds.value.find(b => b.id === active.background_id) ??
+              null)
+            : null
+    }
 
-        async loadCharacterBackgrounds() {
-            const { apiRequest } = useApi()
-            try {
-                this.characterBackgrounds = await apiRequest(
-                    '/character-backgrounds/me',
-                    { method: 'GET' },
-                )
-                this.updateActiveBackgroundForHome()
-            } catch (error) {
-                console.error(
-                    'Ошибка при загрузке пользовательских фонов:',
-                    error,
-                )
-            }
-        },
-
-        async purchaseBackground(background_id: string) {
-            const { apiRequest } = useApi()
-            const userStore = useMyUserStore()
-
-            try {
-                const response: CharacterBackground = await apiRequest(
-                    '/character-backgrounds/me/purchase',
-                    {
-                        method: 'POST',
-                        body: JSON.stringify({ background_id }),
-                    },
-                )
-
-                const existingIndex = this.characterBackgrounds.findIndex(
-                    cb => cb.background_id === background_id,
-                )
-
-                if (existingIndex >= 0) {
-                    const current = this.characterBackgrounds[existingIndex]!
-                    this.characterBackgrounds[existingIndex] = {
-                        ...mergeCharacterBackground(current, response),
-                        is_purchased: true,
-                        purchased_at:
-                            response.purchased_at ??
-                            current.purchased_at ??
-                            new Date().toISOString(),
-                    }
-                } else {
-                    this.characterBackgrounds.push({
-                        ...response,
-                        is_purchased: true,
-                        purchased_at:
-                            response.purchased_at ?? new Date().toISOString(),
-                    })
-                }
-
-                await userStore.loadUserStatistic()
-            } catch (error) {
-                console.error(
-                    `Ошибка при покупке фона ${background_id}:`,
-                    error,
-                )
-            }
-        },
-
-        async equipMyBackground(character_background_id: string) {
-            const char = this.characterBackgrounds.find(
-                cb => cb.id === character_background_id,
+    function upsertCharacterBackground(updated: CharacterBackground): void {
+        const index = characterBackgrounds.value.findIndex(
+            cb => cb.background_id === updated.background_id,
+        )
+        if (index >= 0) {
+            characterBackgrounds.value[index] = mergeCharacterBackground(
+                characterBackgrounds.value[index]!,
+                updated,
             )
-            if (!char) return
+        } else {
+            characterBackgrounds.value.push(updated)
+        }
+    }
 
-            const { apiRequest } = useApi()
-            try {
-                await apiRequest('/character-backgrounds/me/equip', {
-                    method: 'POST',
-                    body: JSON.stringify({ background_id: char.id }),
-                })
+    async function loadBackgroundsCatalog(): Promise<void> {
+        backgrounds.value = await apiRequest<Background[]>(
+            '/backgrounds/catalog',
+            {
+                method: 'GET',
+            },
+        )
+        updateActiveBackgroundForHome()
+    }
 
-                this.characterBackgrounds.forEach(cb => {
-                    cb.is_active = false
-                })
-                char.is_active = true
-                this.updateActiveBackgroundForHome()
-            } catch (error) {
-                console.error('Ошибка при экипировке фона:', error)
-            }
-        },
+    async function loadCharacterBackgrounds(): Promise<void> {
+        characterBackgrounds.value = await apiRequest<CharacterBackground[]>(
+            '/character-backgrounds/me',
+            { method: 'GET' },
+        )
+        updateActiveBackgroundForHome()
+    }
 
-        async unequipMyBackground(character_background_id: string) {
-            const char = this.characterBackgrounds.find(
-                cb => cb.id === character_background_id,
-            )
-            if (!char) return
+    async function purchaseBackground(background_id: string): Promise<void> {
+        const userStore = useMyUserStore()
 
-            const { apiRequest } = useApi()
-            try {
-                await apiRequest('/character-backgrounds/me/unequip', {
-                    method: 'POST',
-                    body: JSON.stringify({ background_id: char.id }),
-                })
+        const response = await apiRequest<CharacterBackground>(
+            '/character-backgrounds/me/purchase',
+            {
+                method: 'POST',
+                body: JSON.stringify({ background_id }),
+            },
+        )
 
-                char.is_active = false
-                this.updateActiveBackgroundForHome()
-            } catch (error) {
-                console.error('Ошибка при снятии фона:', error)
-            }
-        },
+        upsertCharacterBackground({
+            ...response,
+            is_purchased: true,
+            purchased_at: response.purchased_at ?? new Date().toISOString(),
+        })
 
-        async toggleFavoriteCharacterBackground(
-            background_id: string,
-        ): Promise<void> {
-            const { apiRequest } = useApi()
+        await userStore.loadUserStatistic()
+    }
 
-            try {
-                const response: CharacterBackground = await apiRequest(
-                    '/backgrounds/me/toggle-favorite',
-                    {
-                        method: 'POST',
-                        body: JSON.stringify({ background_id }),
-                    },
-                )
+    async function equipBackground(
+        character_background_id: string,
+    ): Promise<void> {
+        const char = characterBackgrounds.value.find(
+            cb => cb.id === character_background_id,
+        )
+        if (!char) return
 
-                const existingIndex = this.characterBackgrounds.findIndex(
-                    cb => cb.background_id === background_id,
-                )
+        await apiRequest('/character-backgrounds/me/equip', {
+            method: 'POST',
+            body: JSON.stringify({ background_id: char.id }),
+        })
 
-                if (existingIndex >= 0) {
-                    this.characterBackgrounds[existingIndex] =
-                        mergeCharacterBackground(
-                            this.characterBackgrounds[existingIndex]!,
-                            response,
-                        )
-                } else {
-                    this.characterBackgrounds.push(response)
-                }
-            } catch (error) {
-                console.error('Ошибка при переключении избранного фона:', error)
-            }
-        },
-    },
+        characterBackgrounds.value.forEach(cb => (cb.is_active = false))
+        char.is_active = true
+        updateActiveBackgroundForHome()
+    }
+
+    async function unequipBackground(
+        character_background_id: string,
+    ): Promise<void> {
+        const char = characterBackgrounds.value.find(
+            cb => cb.id === character_background_id,
+        )
+        if (!char) return
+
+        await apiRequest('/character-backgrounds/me/unequip', {
+            method: 'POST',
+            body: JSON.stringify({ background_id: char.id }),
+        })
+
+        char.is_active = false
+        updateActiveBackgroundForHome()
+    }
+
+    async function toggleFavoriteBackground(
+        background_id: string,
+    ): Promise<void> {
+        const response = await apiRequest<CharacterBackground>(
+            '/backgrounds/me/toggle-favorite',
+            {
+                method: 'POST',
+                body: JSON.stringify({ background_id }),
+            },
+        )
+
+        upsertCharacterBackground(response)
+    }
+
+    return {
+        backgrounds,
+        characterBackgrounds,
+        activeBackgroundForHome,
+
+        allBackgrounds,
+
+        loadBackgroundsCatalog,
+        loadCharacterBackgrounds,
+        purchaseBackground,
+        equipBackground,
+        unequipBackground,
+        toggleFavoriteBackground,
+    }
 })

@@ -66,7 +66,7 @@ const userStore = useMyUserStore()
 
 onMounted(async () => {
     await userStore.loadUserStatistic()
-    userStat.value = userStore.getStatistic
+    userStat.value = userStore.statistic
 })
 
 interface Props {
@@ -86,7 +86,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const radius = computed(() => (props.size / 2) * 0.8)
 const center = computed(() => props.size / 2)
-const photoUrl = computed(() => userStore.getPhotoUrl)
+const photoUrl = computed(() => userStore.photoUrl)
 const innerRadius = computed(() => radius.value * 0.9) // радиус для фото внутри
 
 const getSegmentPath = (segmentIndex: number) => {

@@ -10,14 +10,14 @@ type ApiRequestOptions = RequestInit & {
 export const useApi = () => {
     const userStore = useMyUserStore()
 
-    const apiRequest = async (
+    const apiRequest = async <T = unknown>(
         endpoint: string,
-        options: ApiRequestOptions = {}
-    ): Promise<any> => {
+        options: ApiRequestOptions = {},
+    ): Promise<T> => {
         // Destructure our custom 'query' option from the standard fetch options
         const { query, ...fetchOptions } = options;
 
-        const initData = userStore.getInitData
+        const initData = userStore.initData
         
         let url = endpoint.startsWith('http')
             ? endpoint
@@ -55,10 +55,10 @@ export const useApi = () => {
         }
 
         if (response.status === 204) {
-            return null
+            return null as T
         }
 
-        return response.json()
+        return response.json() as Promise<T>
     }
 
     return {

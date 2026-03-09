@@ -1,249 +1,158 @@
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 import { useApi } from '#imports'
-import type { ItemState } from '~/types/items/items'
+import type { Item, CharacterItem } from '~/types/items/items'
 
-export const useItemsStore = defineStore('itemsStore', {
-    state: (): ItemState => ({
-        items: [],
-        characterItems: [],
-        isLoading: false,
-    }),
-    getters: {
-        allItems: state => state.items,
-        allCharacterItems: state => state.characterItems,
-        getCharacterItemById: state => (id: string) => {
-            return state.characterItems.find(item => item.id === id)
-        },
-        getCharacterItemByItemId: state => (itemId: string) => {
-            return state.characterItems.find(ci => ci.item_id === itemId)
-        },
-        getItemById: state => (id: string) => {
-            return state.items.find(item => item.id === id)
-        },
-        getAllFavoriteCharacterItems: state => {
-            const favoriteItemIds = new Set(
-                state.characterItems
-                    .filter(charItem => charItem.is_favorite)
-                    .map(charItem => charItem.item_id),
-            )
-            return state.items.filter(item => favoriteItemIds.has(item.id))
-        },
-        getNonFavoriteCatalogItems: state => {
-            return state.items.filter(item => {
-                const charItem = state.characterItems.find(
-                    ci => ci.item_id === item.id,
-                )
-                return !charItem || !charItem.is_favorite
+export const useItemsStore = defineStore('itemsStore', () => {
+    const { apiRequest } = useApi()
+
+    const items = ref<Item[]>([])
+    const characterItems = ref<CharacterItem[]>([])
+    const isLoading = ref(false)
+
+    const allItems = computed<Item[]>(() => items.value)
+    const allCharacterItems = computed<CharacterItem[]>(
+        () => characterItems.value,
+    )
+
+    const favoriteItems = computed<Item[]>(() => {
+        const favoriteItemIds = new Set(
+            characterItems.value
+                .filter(ci => ci.is_favorite)
+                .map(ci => ci.item_id),
+        )
+        return items.value.filter(item => favoriteItemIds.has(item.id))
+    })
+
+    const nonFavoriteItems = computed<Item[]>(() =>
+        items.value.filter(item => {
+            const ci = characterItems.value.find(ci => ci.item_id === item.id)
+            return !ci?.is_favorite
+        }),
+    )
+
+    const getCharacterItemById = (id: string): CharacterItem | undefined =>
+        characterItems.value.find(ci => ci.id === id)
+
+    const getCharacterItemByItemId = (
+        itemId: string,
+    ): CharacterItem | undefined =>
+        characterItems.value.find(ci => ci.item_id === itemId)
+
+    const getItemById = (id: string): Item | undefined =>
+        items.value.find(item => item.id === id)
+
+    function upsertCharacterItem(updated: CharacterItem): void {
+        const index = characterItems.value.findIndex(
+            ci => ci.item_id === updated.item_id,
+        )
+        if (index >= 0) {
+            characterItems.value[index] = {
+                ...characterItems.value[index]!,
+                ...updated,
+            }
+        } else {
+            characterItems.value.push(updated)
+        }
+    }
+
+    async function loadItemsCatalog(): Promise<void> {
+        isLoading.value = true
+        try {
+            items.value = await apiRequest<Item[]>('/items/catalog', {
+                method: 'GET',
             })
-        },
-    },
-    actions: {
-        async loadItemsCatalog() {
-            const { apiRequest } = useApi()
-            this.isLoading = true
+        } finally {
+            isLoading.value = false
+        }
+    }
 
-            try {
-                const data = await apiRequest('/items/catalog', {
-                    method: 'GET',
-                })
-                this.items = data
-                console.log('Каталог предметов успешно загружен:', data)
-            } catch (error) {
-                console.error('Ошибка при загрузке каталога предметов:', error)
-            } finally {
-                this.isLoading = false
-            }
-        },
-        async loadCharacterItems() {
-            const { apiRequest } = useApi()
-            this.isLoading = true
+    async function loadCharacterItems(): Promise<void> {
+        isLoading.value = true
+        try {
+            characterItems.value = await apiRequest<CharacterItem[]>(
+                '/character-items/me',
+                { method: 'GET' },
+            )
+        } finally {
+            isLoading.value = false
+        }
+    }
 
-            try {
-                const data = await apiRequest('/character-items/me', {
-                    method: 'GET',
-                })
-                this.characterItems = data
-                console.log(
-                    'Пользовательские предметы успешно загружены:',
-                    data,
-                )
-            } catch (error) {
-                console.error(
-                    'Ошибка при загрузке пользовательских предметов:',
-                    error,
-                )
-            } finally {
-                this.isLoading = false
-            }
-        },
-        async purchaseItem(item_id: string) {
-            const { apiRequest } = useApi()
-            try {
-                const newCharacterItem = await apiRequest(
-                    '/character-items/me/purchase',
-                    {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            item_id: item_id,
-                        }),
-                    },
-                )
-                if (newCharacterItem) {
-                    this.characterItems.push(newCharacterItem)
-                }
-                console.log(`Предмет ${item_id} успешно куплен`)
-            } catch (error) {
-                console.error(`Ошибка при покупке предмета ${item_id}:`, error)
-            }
-        },
-        async giveMeMoney(amount: number) {
-            const { apiRequest } = useApi()
-            try {
-                await apiRequest('/users/me/deposit', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        amount: amount,
-                    }),
-                })
-                console.log('Деньги успешно выдано')
-            } catch (error) {
-                console.error('Ошибка при выдаче денег:', error)
-            }
-        },
-        async equipMyItem(character_item_id: string) {
-            const { apiRequest } = useApi()
-            try {
-                await apiRequest('/character-items/me/equip', {
-                    method: 'PATCH',
-                    body: JSON.stringify({
-                        character_item_id,
-                    }),
-                })
-                console.log('Предмет успешно экипирован')
-                const equippedItem = this.characterItems.find(
-                    item => item.id === character_item_id,
-                )
-                if (!equippedItem) return
-                equippedItem.is_active = true
-            } catch (error) {
-                console.error('Ошибка при экипировке предмета:', error)
-            }
-        },
-        async unequipMyItem(character_item_id: string) {
-            const { apiRequest } = useApi()
-            try {
-                await apiRequest('/character-items/me/unequip', {
-                    method: 'PATCH',
-                    body: JSON.stringify({
-                        character_item_id,
-                    }),
-                })
-                console.log('Предмет успешно снят с экипировки')
-                const itemToUnequip = this.characterItems.find(
-                    item => item.id === character_item_id,
-                )
-                if (itemToUnequip) {
-                    itemToUnequip.is_active = false
-                }
-            } catch (error) {
-                console.error('Ошибка при снятии с экипировки предмета:', error)
-            }
-        },
-        async toggleFavoriteCharacterItem(item_id: string): Promise<void> {
-            const { apiRequest } = useApi()
-            try {
-                const updatedItem = await apiRequest(
-                    `/items/me/toggle-favorite`,
-                    {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            item_id: item_id,
-                        }),
-                    },
-                )
+    async function purchaseItem(item_id: string): Promise<void> {
+        const newCharacterItem = await apiRequest<CharacterItem>(
+            '/character-items/me/purchase',
+            {
+                method: 'POST',
+                body: JSON.stringify({ item_id }),
+            },
+        )
+        characterItems.value.push(newCharacterItem)
+    }
 
-                const existingIndex = this.characterItems.findIndex(
-                    charItem => charItem.item_id === item_id,
-                )
-                const existingItem =
-                    existingIndex >= 0
-                        ? this.characterItems[existingIndex]
-                        : null
+    async function equipItem(character_item_id: string): Promise<void> {
+        await apiRequest('/character-items/me/equip', {
+            method: 'PATCH',
+            body: JSON.stringify({ character_item_id }),
+        })
 
-                if (
-                    updatedItem &&
-                    typeof updatedItem === 'object' &&
-                    'item_id' in updatedItem &&
-                    typeof updatedItem.item_id === 'string'
-                ) {
-                    const payload = updatedItem as Partial<
-                        (typeof this.characterItems)[number]
-                    > & { item_id: string }
+        const item = characterItems.value.find(
+            ci => ci.id === character_item_id,
+        )
+        if (item) item.is_active = true
+    }
 
-                    const targetIndex = this.characterItems.findIndex(
-                        charItem => charItem.item_id === payload.item_id,
-                    )
+    async function unequipItem(character_item_id: string): Promise<void> {
+        await apiRequest('/character-items/me/unequip', {
+            method: 'PATCH',
+            body: JSON.stringify({ character_item_id }),
+        })
 
-                    if (targetIndex >= 0) {
-                        const currentItem = this.characterItems[targetIndex]
-                        if (!currentItem) return
-                        this.characterItems[targetIndex] = {
-                            ...currentItem,
-                            id:
-                                typeof payload.id === 'string'
-                                    ? payload.id
-                                    : currentItem.id,
-                            character_id:
-                                typeof payload.character_id === 'string'
-                                    ? payload.character_id
-                                    : currentItem.character_id,
-                            item_id: payload.item_id,
-                            is_active:
-                                typeof payload.is_active === 'boolean'
-                                    ? payload.is_active
-                                    : currentItem.is_active,
-                            is_purchased:
-                                typeof payload.is_purchased === 'boolean'
-                                    ? payload.is_purchased
-                                    : currentItem.is_purchased,
-                            is_favorite:
-                                typeof payload.is_favorite === 'boolean'
-                                    ? payload.is_favorite
-                                    : !currentItem.is_favorite,
-                        }
-                    } else if (
-                        typeof payload.id === 'string' &&
-                        typeof payload.character_id === 'string'
-                    ) {
-                        this.characterItems.push({
-                            character_id: payload.character_id,
-                            item_id: payload.item_id,
-                            is_active: !!payload.is_active,
-                            is_favorite:
-                                typeof payload.is_favorite === 'boolean'
-                                    ? payload.is_favorite
-                                    : true,
-                            is_purchased: !!payload.is_purchased,
-                            id: payload.id,
-                        })
-                    } else if (existingItem) {
-                        existingItem.is_favorite = !existingItem.is_favorite
-                    } else {
-                        await this.loadCharacterItems()
-                    }
-                } else if (existingItem) {
-                    existingItem.is_favorite = !existingItem.is_favorite
-                } else {
-                    await this.loadCharacterItems()
-                }
+        const item = characterItems.value.find(
+            ci => ci.id === character_item_id,
+        )
+        if (item) item.is_active = false
+    }
 
-                console.log('Предмет успешно добавлен/удален из избранного')
-            } catch (error) {
-                console.error(
-                    'Ошибка при добавлении/удалении предмета из избранного:',
-                    error,
-                )
-            }
-        },
-    },
+    async function toggleFavoriteItem(item_id: string): Promise<void> {
+        const updated = await apiRequest<CharacterItem>(
+            '/items/me/toggle-favorite',
+            {
+                method: 'POST',
+                body: JSON.stringify({ item_id }),
+            },
+        )
+        upsertCharacterItem(updated)
+    }
+
+    // dev-only helper, remove before production
+    async function giveMeMoney(amount: number): Promise<void> {
+        await apiRequest('/users/me/deposit', {
+            method: 'POST',
+            body: JSON.stringify({ amount }),
+        })
+    }
+
+    return {
+        items,
+        characterItems,
+        isLoading,
+
+        allItems,
+        allCharacterItems,
+        favoriteItems,
+        nonFavoriteItems,
+
+        getItemById,
+        getCharacterItemById,
+        getCharacterItemByItemId,
+        upsertCharacterItem,
+        loadItemsCatalog,
+        loadCharacterItems,
+        purchaseItem,
+        equipItem,
+        unequipItem,
+        toggleFavoriteItem,
+        giveMeMoney,
+    }
 })

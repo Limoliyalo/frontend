@@ -29,15 +29,13 @@
                                 : 'text-white'
                         "
                         @click="
-                            backgroundsStore.toggleFavoriteCharacterBackground(
-                                carouselItem.id
+                            backgroundsStore.toggleFavoriteBackground(
+                                carouselItem.id,
                             )
                         "
                     />
                 </div>
-                <div
-                    class="absolute inset-0 rounded-lg overflow-hidden"
-                >
+                <div class="absolute inset-0 rounded-lg overflow-hidden">
                     <img
                         v-if="carouselItem.picture_url"
                         :src="carouselItem.picture_url"
@@ -135,7 +133,7 @@ const shopBackgroundsWithStatus = computed(() => {
         characterBackgrounds.value.map(charItem => [
             charItem.background_id,
             charItem,
-        ])
+        ]),
     )
 
     return allBackgrounds.value.map(item => {
@@ -165,7 +163,7 @@ const filteredBackgrounds = computed(() => {
     if (!normalizedQuery) return source
 
     return source.filter(background =>
-        background.name.toLowerCase().includes(normalizedQuery)
+        background.name.toLowerCase().includes(normalizedQuery),
     )
 })
 
@@ -175,11 +173,11 @@ const buyItem = (itemId: string) => {
 
 async function equip(character_background_id: string | null) {
     if (!character_background_id) return
-    await backgroundsStore.equipMyBackground(character_background_id)
+    await backgroundsStore.equipBackground(character_background_id)
 }
 async function unequip(character_background_id: string | null) {
     if (!character_background_id) return
-    await backgroundsStore.unequipMyBackground(character_background_id)
+    await backgroundsStore.unequipBackground(character_background_id)
 }
 </script>
 

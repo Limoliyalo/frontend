@@ -16,10 +16,10 @@ const MAX_EXPERIENCE = 100
 
 onMounted(async () => {
     await userStore.loadUserStatistic()
-    userStat.value = userStore.getStatistic
+    userStat.value = userStore.statistic
 })
 const value = computed(() => {
-    const statistic = userStore.getStatistic
+    const statistic = userStore.statistic
 
     if (!statistic) {
         return 0

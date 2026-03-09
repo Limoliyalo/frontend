@@ -9,200 +9,138 @@ import type {
     DailyActivityUpdate,
 } from '~/types/activities/activities'
 
+const toApiDayString = (date: Date): string =>
+    date.toISOString().split('T')[0] + 'T00:00:00.000Z'
+
+const DEFAULT_ACTIVITY_NAMES = ['water', 'food', 'exercise'] as const
+
 export const useActivitiesStore = defineStore('activities', () => {
+    const { apiRequest } = useApi()
+
     const activityTypes = ref<ActivityType[]>([])
     const baseActivities = ref<BaseActivity[]>([])
     const dailyActivities = ref<DailyActivity[]>([])
 
-    // Getters
-    const getActivityTypesCatalog = computed(() => activityTypes.value)
-    const getCharacterBaseActivities = computed(() => baseActivities.value)
-    const getCharacterBaseActivityName = (activityTypeId: string) => {
-        const activity = activityTypes.value.find(
-            activity => activity.id === activityTypeId
-        )
-        return activity ? activity.name : ''
-    }
-    const getCharacterBaseActivityColor = (activityTypeId: string) => {
-        const color = activityTypes.value.find(
-            activity => activity.id === activityTypeId
-        )
-        return color ? color.color : ''
-    }
-    const getCurrentBaseActivity = (id: string): BaseActivity | undefined => {
-        return baseActivities.value.find(activity => activity.id === id)
-    }
-
-    /** Find activity type id by name (case-insensitive, trimmed). */
-    const getActivityTypeIdByName = (name: string): string | undefined => {
-        const normalized = name.trim().toLowerCase()
-        const type = activityTypes.value.find(
-            t => t.name.trim().toLowerCase() === normalized
-        )
-        return type?.id
-    }
-
-    /** Default activity type names for profile circles and choice screen. */
-    const DEFAULT_ACTIVITY_NAMES = ['water', 'food', 'exercise'] as const
-
-    /** Ids of default activity types (water, food, exercise) from catalog. */
-    const getDefaultActivityTypeIds = computed(() =>
-        DEFAULT_ACTIVITY_NAMES.map(name => getActivityTypeIdByName(name)).filter(
-            (id): id is string => id != null
-        )
+    const activityTypesCatalog = computed<ActivityType[]>(
+        () => activityTypes.value,
     )
 
-    // Actions
-    async function loadActivityTypesCatalog() {
+    const characterBaseActivities = computed<BaseActivity[]>(
+        () => baseActivities.value,
+    )
+
+    const defaultActivityTypeIds = computed<string[]>(() =>
+        DEFAULT_ACTIVITY_NAMES.map(name =>
+            getActivityTypeIdByName(name),
+        ).filter((id): id is string => id != null),
+    )
+
+    const getActivityTypeName = (activityTypeId: string): string =>
+        activityTypes.value.find(a => a.id === activityTypeId)?.name ?? ''
+
+    const getActivityTypeColor = (activityTypeId: string): string =>
+        activityTypes.value.find(a => a.id === activityTypeId)?.color ?? ''
+
+    const getBaseActivity = (id: string): BaseActivity | undefined =>
+        baseActivities.value.find(a => a.id === id)
+
+    const getActivityTypeIdByName = (name: string): string | undefined => {
+        const normalized = name.trim().toLowerCase()
+        return activityTypes.value.find(
+            t => t.name.trim().toLowerCase() === normalized,
+        )?.id
+    }
+
+    const getDailyActivityForType = (
+        activityTypeId: string,
+        date: string,
+    ): DailyActivity | undefined =>
+        dailyActivities.value.find(
+            d =>
+                d.activity_type_id === activityTypeId &&
+                d.date.startsWith(date),
+        )
+
+    async function loadActivityTypesCatalog(): Promise<void> {
         if (activityTypes.value.length > 0) return
-        const { apiRequest } = useApi()
-        try {
-            const data: ActivityType[] = await apiRequest(
-                '/activity-types/catalog',
-                {
-                    method: 'GET',
-                }
-            )
-            activityTypes.value = data
-            console.log('Каталог типов активностей успешно загружен:', data)
-        } catch (error) {
-            console.error(
-                'Ошибка при загрузке каталога типов активностей:',
-                error
-            )
-        }
+
+        const data = await apiRequest<ActivityType[]>(
+            '/activity-types/catalog',
+            {
+                method: 'GET',
+            },
+        )
+
+        activityTypes.value = data
     }
 
-    async function createCharacterBaseActivities(activities: string[]) {
-        const { apiRequest } = useApi()
-        try {
-            for (const activityType of activities) {
-                const payload = {
-                    activity_type_id: activityType,
-                }
-                await apiRequest('/base-character-activities/me', {
+    async function createCharacterBaseActivities(
+        activityTypeIds: string[],
+    ): Promise<void> {
+        await Promise.all(
+            activityTypeIds.map(activity_type_id =>
+                apiRequest('/base-character-activities/me', {
                     method: 'POST',
-                    body: JSON.stringify(payload),
-                })
-            }
-            console.log('Базовые активности персонажа успешно созданы.')
-        } catch (error) {
-            console.error(
-                'Ошибка при создании базовых активностей персонажа:',
-                error
-            )
-        }
+                    body: JSON.stringify({ activity_type_id }),
+                }),
+            ),
+        )
     }
 
-    async function loadCharacterBaseActivities() {
-        const { apiRequest } = useApi()
-        try {
-            baseActivities.value = await apiRequest(
-                '/base-character-activities/me',
-                {
-                    method: 'GET',
-                }
-            )
-            console.log(
-                'Базовые активности персонажа успешно загружены:',
-                baseActivities.value
-            )
-        } catch (error) {
-            console.error(
-                'Ошибка при загрузке базовых активностей персонажа:',
-                error
-            )
-        }
+    async function loadCharacterBaseActivities(): Promise<void> {
+        baseActivities.value = await apiRequest<BaseActivity[]>(
+            '/base-character-activities/me',
+            { method: 'GET' },
+        )
     }
 
-    async function loadCharacterDailyActivities(date?: string) {
-        const { apiRequest } = useApi()
-        try {
-            const day =
-                date ??
-                new Date().toISOString().split('T')[0] + 'T00:00:00.000Z'
+    async function loadCharacterDailyActivities(date?: string): Promise<void> {
+        const day = date ?? toApiDayString(new Date())
 
-            dailyActivities.value = await apiRequest(
-                `/daily-activities/me?day=${day}`,
-                {
-                    method: 'GET',
-                }
-            )
-
-            console.log(
-                'Ежедневные активности персонажа успешно загружены:',
-                dailyActivities.value
-            )
-        } catch (error) {
-            console.error(
-                'Ошибка при загрузке ежедневных активностей персонажа:',
-                error
-            )
-        }
+        dailyActivities.value = await apiRequest<DailyActivity[]>(
+            `/daily-activities/me?day=${day}`,
+            { method: 'GET' },
+        )
     }
 
     async function createCharacterDailyActivity(
-        dailyActivity: DailyActivityCreate
-    ) {
-        const { apiRequest } = useApi()
-        try {
-            await apiRequest('/daily-activities/me', {
-                method: 'POST',
-                body: JSON.stringify(dailyActivity),
-            })
-
-            console.log('Ежедневная активность персонажа успешно создана.')
-        } catch (error) {
-            console.error(
-                'Ошибка при создании ежедневной активности персонажа:',
-                error
-            )
-        }
+        dailyActivity: DailyActivityCreate,
+    ): Promise<void> {
+        await apiRequest('/daily-activities/me', {
+            method: 'POST',
+            body: JSON.stringify(dailyActivity),
+        })
     }
 
     async function updateCharacterDailyActivity(
-        dailyActivity: DailyActivityUpdate
-    ) {
-        const { apiRequest } = useApi()
-        try {
-            await apiRequest('/daily-activities/me', {
-                method: 'PATCH',
-                body: JSON.stringify(dailyActivity),
-            })
-
-            console.log('Ежедневная активность персонажа успешно обновлена.')
-        } catch (error) {
-            console.error(
-                'Ошибка при обновлении ежедневной активности персонажа:',
-                error
-            )
-        }
+        dailyActivity: DailyActivityUpdate,
+    ): Promise<void> {
+        await apiRequest('/daily-activities/me', {
+            method: 'PATCH',
+            body: JSON.stringify(dailyActivity),
+        })
     }
-
-    function getDailyActivityForType(activityTypeId: string, date: string) {
-        return dailyActivities.value.find(
-            daily =>
-                daily.activity_type_id === activityTypeId &&
-                daily.date.startsWith(date) // проверка на день
-        )
-    }
-
-    
 
     return {
-        loadActivityTypesCatalog,
-        getActivityTypesCatalog,
+        activityTypes,
+        baseActivities,
+        dailyActivities,
+
+        activityTypesCatalog,
+        characterBaseActivities,
+        defaultActivityTypeIds,
+
+        getActivityTypeName,
+        getActivityTypeColor,
         getActivityTypeIdByName,
-        getDefaultActivityTypeIds,
+        getBaseActivity,
+        getDailyActivityForType,
+
+        loadActivityTypesCatalog,
         createCharacterBaseActivities,
         loadCharacterBaseActivities,
-        getCharacterBaseActivities,
-        getCharacterBaseActivityName,
-        getCharacterBaseActivityColor,
-        getCurrentBaseActivity,
         loadCharacterDailyActivities,
         createCharacterDailyActivity,
         updateCharacterDailyActivity,
-        getDailyActivityForType,
     }
 })

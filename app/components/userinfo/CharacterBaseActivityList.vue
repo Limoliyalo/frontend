@@ -11,17 +11,17 @@
                 class="bg-white/10 backdrop-blur-sm text-white py-6 px-4 rounded-full text-sm cursor-pointer hover:bg-white/20 transition-colors duration-300"
                 :style="{
                     backgroundColor:
-                        activitiesStore.getCharacterBaseActivityColor(
-                            activity.activity_type_id
-                        ),
+                       activitiesStore.getActivityTypeColor(
+                           activity.activity_type_id
+                       ),
                 }"
             >
                 <div class="flex justify-between">
                     <div>
                         {{
-                            activitiesStore.getCharacterBaseActivityName(
-                                activity.activity_type_id
-                            )
+                           activitiesStore.getActivityTypeName(
+                               activity.activity_type_id
+                           )
                         }}
                     </div>
                     <div>
@@ -43,7 +43,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useActivitiesStore } from '#imports'
 
 const activities = computed(
-    () => activitiesStore.getCharacterBaseActivities || []
+   () => activitiesStore.characterBaseActivities || []
 )
 
 const activitiesStore = useActivitiesStore()
