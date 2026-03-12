@@ -1,7 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useApi } from '#imports'
-import type { Item, CharacterItem } from '~/types/items/items'
+import type {
+    Item,
+    CharacterItem,
+    ItemWithBackgroundPosition,
+} from '~/types/items/items'
 
 export const useItemsStore = defineStore('itemsStore', () => {
     const { apiRequest } = useApi()
@@ -9,6 +13,12 @@ export const useItemsStore = defineStore('itemsStore', () => {
     const items = ref<Item[]>([])
     const characterItems = ref<CharacterItem[]>([])
     const isLoading = ref(false)
+
+    /** Кэш отфильтрованных позиций по background_id. Сбрасывается при equip/unequip. */
+    const itemsWithPositionsCache = ref<
+        Record<string, ItemWithBackgroundPosition[]>
+    >({})
+
 
     const allItems = computed<Item[]>(() => items.value)
     const allCharacterItems = computed<CharacterItem[]>(
@@ -100,6 +110,7 @@ export const useItemsStore = defineStore('itemsStore', () => {
             ci => ci.id === character_item_id,
         )
         if (item) item.is_active = true
+        itemsWithPositionsCache.value = {}
     }
 
     async function unequipItem(character_item_id: string): Promise<void> {
@@ -112,6 +123,7 @@ export const useItemsStore = defineStore('itemsStore', () => {
             ci => ci.id === character_item_id,
         )
         if (item) item.is_active = false
+        itemsWithPositionsCache.value = {}
     }
 
     async function toggleFavoriteItem(item_id: string): Promise<void> {
@@ -132,6 +144,35 @@ export const useItemsStore = defineStore('itemsStore', () => {
             body: JSON.stringify({ amount }),
         })
     }
+
+    async function loadItemsWithPositionsForBackground(
+        background_id: string,
+    ): Promise<ItemWithBackgroundPosition[]> {
+        if (!background_id) return []
+
+        const cached = itemsWithPositionsCache.value[background_id]
+        if (cached) return cached
+
+        const raw = await apiRequest<ItemWithBackgroundPosition[]>(
+            '/item-background-positions/me/items',
+            {
+                method: 'GET',
+                query: { background_id },
+            },
+        )
+
+        const filtered = raw.filter(entry => {
+            const ci = characterItems.value.find(
+                c => c.item_id === entry.item.id,
+            )
+            return ci?.is_purchased === true && ci?.is_active === true
+        })
+
+        itemsWithPositionsCache.value[background_id] = filtered
+        return filtered
+    }
+
+    
 
     return {
         items,
@@ -154,5 +195,6 @@ export const useItemsStore = defineStore('itemsStore', () => {
         unequipItem,
         toggleFavoriteItem,
         giveMeMoney,
+        loadItemsWithPositionsForBackground,
     }
 })

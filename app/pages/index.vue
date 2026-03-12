@@ -14,8 +14,22 @@
             loop
             muted
         ></video>
+        <div v-for="item in itemsWithPositions" :key="item.item.id">
+            <div
+                :style="{
+                    top: item.position.position_y + 'px',
+                    left: item.position.position_x + 'px',
+                    zIndex: item.position.position_z,
+                }"
+                class="absolute"
+            >
+                <img :src="item.item.picture_url ?? ''" :alt="item.item.name" />
+            </div>
+        </div>
         <progress-bar class="absolute left-4 top-10" />
-        <div class="absolute top-7 right-2 z-10 flex flex-col items-center gap-2">
+        <div
+            class="absolute top-7 right-2 z-10 flex flex-col items-center gap-2"
+        >
             <NuxtLink to="/settings">
                 <div><Icon name="hugeicons:settings-05" size="32" /></div>
             </NuxtLink>
@@ -39,9 +53,13 @@ import { storeToRefs } from 'pinia'
 import lofiVideo from '~/assets/LoFi.mp4'
 import ChooseYourActivity from '~/components/ChooseYourActivity.vue'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
+import { useItemsStore } from '~/stores/items.store'
+import type { ItemWithBackgroundPosition } from '~/types/items/items'
 
 const backgroundsStore = useMyBackgroundsStore()
+const itemsStore = useItemsStore()
 const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
+const itemsWithPositions = ref<ItemWithBackgroundPosition[]>([])
 
 const showModal = ref(true)
 
@@ -53,7 +71,13 @@ onMounted(async () => {
     await Promise.all([
         backgroundsStore.loadBackgroundsCatalog(),
         backgroundsStore.loadCharacterBackgrounds(),
+        itemsStore.loadCharacterItems(),
     ])
+
+    itemsWithPositions.value =
+        await itemsStore.loadItemsWithPositionsForBackground(
+            activeBackgroundForHome.value?.id ?? '',
+        )
 })
 </script>
 

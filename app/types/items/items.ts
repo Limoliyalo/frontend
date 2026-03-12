@@ -25,3 +25,20 @@ export interface ItemState {
     characterItems: CharacterItem[]
     isLoading: boolean
 }
+
+/** Position of an item on a background (from item-background-positions API). */
+export interface ItemBackgroundPosition {
+    item_id: string
+    background_id: string
+    position_x: number
+    position_y: number
+    position_z: number
+    id: string
+}
+
+/** Response element from GET /item-background-positions/me/items?background_id=... */
+export interface ItemWithBackgroundPosition {
+    item: Item
+    position: ItemBackgroundPosition
+}
+
