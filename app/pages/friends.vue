@@ -11,6 +11,9 @@
                     <span>{{ friendInfoMap[friend.friend_tg_id]?.character.sex }}</span>
                     <span>Level {{ friendInfoMap[friend.friend_tg_id]?.character.level }}</span>
                 </template>
+                <template v-else-if="friendInfoMap[friend.friend_tg_id] === null">
+                    <span class="text-white/60 italic text-sm">пока ваша дружба с {{ friend.friend_tg_id }} не взаимна((</span>
+                </template>
                 <template v-else>
                     <span>{{ friend.friend_tg_id }}</span>
                 </template>
@@ -70,7 +73,7 @@ import type { FriendFullInfo } from '~/types/friends/friends'
 
 const friendStore = useUserFriendsStore()
 const friendArr = computed(() => friendStore.friends)
-const friendInfoMap = ref<Record<number, FriendFullInfo>>({})
+const friendInfoMap = ref<Record<number, FriendFullInfo | null>>({})
 
 const showModal = ref(false)
 const showDeleteModal = ref(false)
@@ -125,19 +128,21 @@ async function confirmDeleteFriend() {
 }
 
 async function loadFriendsFullInfo() {
-    const friendInfoList = await Promise.all(
+    const results = await Promise.allSettled(
         friendArr.value.map(friend =>
             friendStore.loadFriendFullInfo(friend.friend_tg_id)
         )
     )
 
-    friendInfoMap.value = friendInfoList.reduce<Record<number, FriendFullInfo>>(
-        (accumulator, friendInfo) => {
-            if (friendInfo) {
-                accumulator[friendInfo.user_tg_id] = friendInfo
+    friendInfoMap.value = results.reduce<Record<number, FriendFullInfo | null>>(
+        (acc, result, i) => {
+            const tgId = friendArr.value[i]!.friend_tg_id
+            if (result.status === 'fulfilled' && result.value) {
+                acc[result.value.user_tg_id] = result.value
+            } else {
+                acc[tgId] = null
             }
-
-            return accumulator
+            return acc
         },
         {}
     )
