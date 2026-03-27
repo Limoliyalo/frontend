@@ -121,6 +121,15 @@ export const useActivitiesStore = defineStore('activities', () => {
         })
     }
 
+    async function fetchDailyActivitiesForDay(
+        date: string,
+    ): Promise<DailyActivity[]> {
+        return await apiRequest<DailyActivity[]>(
+            `/daily-activities/me?day=${date}`,
+            { method: 'GET' },
+        )
+    }
+
     return {
         activityTypes,
         baseActivities,
@@ -142,5 +151,6 @@ export const useActivitiesStore = defineStore('activities', () => {
         loadCharacterDailyActivities,
         createCharacterDailyActivity,
         updateCharacterDailyActivity,
+        fetchDailyActivitiesForDay,
     }
 })

@@ -47,11 +47,19 @@
         <div>
             <UButton size="xl" @click="applyChanges">Применить</UButton>
         </div>
+
+        <!-- Статистика за неделю -->
+        <div class="w-full max-w-lg">
+            <UserinfoActivityWeeklyChart
+                :chart-data="chartData"
+                :color="activityColor"
+            />
+        </div>
     </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useActivitiesStore, onMounted } from '#imports'
 
@@ -64,29 +72,78 @@ const currentBaseActivity = activitiesStore.getBaseActivity(
 const progressValue = ref(0)
 const dailyActivityId = ref<string | null>(null)
 
+const RU_DAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+
+interface ChartItem {
+    date: string
+    percentage: number
+    dayLabel: string
+    isToday: boolean
+}
+
+const chartData = ref<ChartItem[]>([])
+
+const activityColor = computed(() =>
+    activitiesStore.getActivityTypeColor(
+        currentBaseActivity?.activity_type_id ?? ''
+    )
+)
+
 onMounted(async () => {
     const activityTypeId = currentBaseActivity.activity_type_id
 
-    // 1. Загружаем daily activities за сегодня
     await activitiesStore.loadCharacterDailyActivities()
 
-    // 2. Ищем запись для этого activity_type_id
-    const today = new Date().toISOString().split('T')[0] || '' // YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0] || ''
     const daily = activitiesStore.getDailyActivityForType(activityTypeId, today)
 
     if (daily) {
-        // Уже существует
         dailyActivityId.value = daily.id
         progressValue.value = daily.value
     } else {
-        // Ещё нет записи
         dailyActivityId.value = null
         progressValue.value = 0
     }
+
+    // Fetch last 7 days for the weekly chart
+    const todayDate = new Date()
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(todayDate)
+        d.setDate(d.getDate() - (6 - i))
+        return d
+    })
+
+    const dayStrings = last7Days.map(
+        d => d.toISOString().split('T')[0] + 'T00:00:00.000Z'
+    )
+
+    const results = await Promise.allSettled(
+        dayStrings.map(day => activitiesStore.fetchDailyActivitiesForDay(day))
+    )
+
+    chartData.value = last7Days.map((d, i) => {
+        const dateKey = d.toISOString().split('T')[0]!
+        const isToday = dateKey === today
+        const result = results[i]
+        const entries = result?.status === 'fulfilled' ? result.value : []
+        const entry = entries.find(a => a.activity_type_id === activityTypeId)
+        const percentage = entry && entry.goal > 0
+            ? Math.min((entry.value / entry.goal) * 100, 100)
+            : 0
+
+        return {
+            date: dateKey,
+            percentage,
+            dayLabel: RU_DAYS[d.getDay()]!,
+            isToday,
+        }
+    })
 })
 
 const increment = () => {
-    if (progressValue.value < 100) progressValue.value++
+    if (progressValue.value < (currentBaseActivity?.goal ?? Infinity)) {
+        progressValue.value++
+    }
 }
 const decrement = () => {
     if (progressValue.value > 0) progressValue.value--
@@ -97,7 +154,6 @@ const applyChanges = async () => {
     const todayDate = `${new Date().toISOString().split('T')[0]}T00:00:00Z`
 
     if (dailyActivityId.value === null) {
-        // Создаём новую запись
         await activitiesStore.createCharacterDailyActivity({
             activity_type_id: activityTypeId,
             date: todayDate,
@@ -106,7 +162,6 @@ const applyChanges = async () => {
             notes: '',
         })
     } else {
-        // Обновляем существующую запись
         await activitiesStore.updateCharacterDailyActivity({
             activity_id: dailyActivityId.value,
             value: progressValue.value,
