@@ -2,7 +2,9 @@
     <div class="glass-container fixed left-0 w-full bottom-4 z-10000">
         <navbar />
     </div>
-    <slot />
+    <div class="min-h-screen pb-[88px]">
+        <slot />
+    </div>
 </template>
 
 <script lang="ts" setup></script>
