@@ -1,5 +1,6 @@
 <template>
     <div class="p-4">
+        <PageBackground :url="activeBackgroundForHome?.profile_url" :alt="activeBackgroundForHome?.name" />
         <UserinfoUserDayProgress
             :segments="[
                 { progress: foodPercentage, color: foodColor },
@@ -14,9 +15,14 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useActivitiesStore } from '#imports'
+import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import CharacterBaseActivityList from '~/components/userinfo/CharacterBaseActivityList.vue'
 import type { DailyActivity } from '~/types/activities/activities'
+
+const backgroundsStore = useMyBackgroundsStore()
+const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
 
 const activityStore = useActivitiesStore()
 const foodprogress = ref<DailyActivity>()

@@ -1,4 +1,6 @@
 <template>
+    <div>
+        <PageBackground :url="activeBackgroundForHome?.friends_url" :alt="activeBackgroundForHome?.name" />
     <div class="glass-container">
         <div
             v-for="friend in friendArr"
@@ -64,12 +66,18 @@
             </div>
         </div>
     </div>
+    </div>
 </template>
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useUserFriendsStore } from '#imports'
+import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import type { FriendFullInfo } from '~/types/friends/friends'
+
+const backgroundsStore = useMyBackgroundsStore()
+const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
 
 const friendStore = useUserFriendsStore()
 const friendArr = computed(() => friendStore.friends)

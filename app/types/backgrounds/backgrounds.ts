@@ -4,6 +4,10 @@ export interface Background {
     color: string
     cost: number
     picture_url?: string | null
+    shop_url?: string | null
+    profile_url?: string | null
+    settings_url?: string | null
+    friends_url?: string | null
     required_level: number
     is_available: boolean
     id: string

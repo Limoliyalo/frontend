@@ -1,5 +1,6 @@
 <template>
     <div class="flex flex-col gap-1.5 mt-4 mx-4">
+        <PageBackground :url="activeBackgroundForHome?.shop_url" :alt="activeBackgroundForHome?.name" />
         <div class="flex gap-1.5 items-center justify-start">
             <ShopSearch @search="handleSearch" />
             <ShopFavourite @click="isFavourite = !isFavourite" />
@@ -28,6 +29,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useMyUserStore } from '~/stores/user.store'
 import { useItemsStore } from '~/stores/items.store'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
@@ -35,6 +37,7 @@ import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 const userStore = useMyUserStore()
 const itemsStore = useItemsStore()
 const backgroundsStore = useMyBackgroundsStore()
+const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
 
 const userStat = computed(() => userStore.statistic)
 
@@ -62,8 +65,7 @@ onMounted(async () => {
         userStore.loadUserStatistic(),
         itemsStore.loadItemsCatalog(),
         itemsStore.loadCharacterItems(),
-        backgroundsStore.loadBackgroundsCatalog(),
-        backgroundsStore.loadCharacterBackgrounds(),
+        backgroundsStore.ensureBackgroundsLoaded(),
     ])
 })
 </script>

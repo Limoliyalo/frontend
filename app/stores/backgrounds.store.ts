@@ -24,6 +24,7 @@ export const useMyBackgroundsStore = defineStore('backgroundsStore', () => {
     const backgrounds = ref<Background[]>([])
     const characterBackgrounds = ref<CharacterBackground[]>([])
     const activeBackgroundForHome = ref<Background | null>(null)
+    const isLoaded = ref(false)
 
     const allBackgrounds = computed<Background[]>(() => backgrounds.value)
 
@@ -65,6 +66,12 @@ export const useMyBackgroundsStore = defineStore('backgroundsStore', () => {
             { method: 'GET' },
         )
         updateActiveBackgroundForHome()
+    }
+
+    async function ensureBackgroundsLoaded(): Promise<void> {
+        if (isLoaded.value) return
+        await Promise.all([loadBackgroundsCatalog(), loadCharacterBackgrounds()])
+        isLoaded.value = true
     }
 
     async function purchaseBackground(background_id: string): Promise<void> {
@@ -140,11 +147,13 @@ export const useMyBackgroundsStore = defineStore('backgroundsStore', () => {
         backgrounds,
         characterBackgrounds,
         activeBackgroundForHome,
+        isLoaded,
 
         allBackgrounds,
 
         loadBackgroundsCatalog,
         loadCharacterBackgrounds,
+        ensureBackgroundsLoaded,
         purchaseBackground,
         equipBackground,
         unequipBackground,

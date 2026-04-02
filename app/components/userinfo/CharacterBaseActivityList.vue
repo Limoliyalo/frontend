@@ -30,15 +30,7 @@
                             )
                         }}
                     </div>
-                    <div>
-                        {{
-                            activitiesStore.getDailyActivityForType(
-                                activity.activity_type_id,
-                                today,
-                            )?.value || 0
-                        }}
-                        / {{ activity.goal }}
-                    </div>
+                    <div>{{ formatValueGoal(activity) }}</div>
                 </div>
             </NuxtLink>
             <div
@@ -61,12 +53,24 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue'
 import { useActivitiesStore } from '#imports'
-
-const activities = computed(() => activitiesStore.characterBaseActivities || [])
+import type { BaseActivity } from '~/types/activities/activities'
 
 const activitiesStore = useActivitiesStore()
+const activities = computed(() => activitiesStore.characterBaseActivities || [])
+
 const today = new Date().toISOString().split('T')[0] || '' // YYYY-MM-DD
 const showModal = ref(false)
+
+function formatValueGoal(activity: BaseActivity): string {
+    const value =
+        activitiesStore.getDailyActivityForType(
+            activity.activity_type_id,
+            today,
+        )?.value ?? 0
+    const unit = activitiesStore.getActivityTypeUnit(activity.activity_type_id)
+    const suffix = unit ? ` ${unit}` : ''
+    return `${value}${suffix} / ${activity.goal}${suffix}`
+}
 
 function closeModal() {
     showModal.value = false

@@ -60,9 +60,11 @@ import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import { useItemsStore } from '~/stores/items.store'
 import type { ItemWithBackgroundPosition } from '~/types/items/items'
 import { useActivitiesStore } from '#imports'
+import { useMyCharacterStore } from '~/stores/character.store'
 
 const backgroundsStore = useMyBackgroundsStore()
 const itemsStore = useItemsStore()
+const characterStore = useMyCharacterStore()
 const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
 
 
@@ -78,6 +80,15 @@ function closeModal() {
     showModal.value = false
 }
 
+function maybeShowActivityPicker(): void {
+    if (
+        characterStore.isRegistered &&
+        activitiesStore.characterBaseActivities.length === 0
+    ) {
+        showModal.value = true
+    }
+}
+
 async function syncItemsForActiveBackground(): Promise<void> {
     const backgroundId = activeBackgroundForHome.value?.id ?? ''
     if (!backgroundId) return
@@ -88,18 +99,24 @@ async function syncItemsForActiveBackground(): Promise<void> {
 
 onMounted(async () => {
     await Promise.all([
-        backgroundsStore.loadBackgroundsCatalog(),
-        backgroundsStore.loadCharacterBackgrounds(),
+        backgroundsStore.ensureBackgroundsLoaded(),
         itemsStore.ensureCharacterItemsLoaded(),
         activitiesStore.loadCharacterBaseActivities(),
     ])
 
     await syncItemsForActiveBackground()
 
-    if (activitiesStore.characterBaseActivities.length === 0) {
-        showModal.value = true
-    }
+    maybeShowActivityPicker()
 })
+
+watch(
+    () => characterStore.isRegistered,
+    async registered => {
+        if (!registered) return
+        await activitiesStore.loadCharacterBaseActivities()
+        maybeShowActivityPicker()
+    },
+)
 
 watch(
     () => activeBackgroundForHome.value?.id,
@@ -109,14 +126,4 @@ watch(
 )
 </script>
 
-<style>
-.fullscreen-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: fill;
-    z-index: -1;
-}
-</style>
+<style></style>

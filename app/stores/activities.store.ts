@@ -41,6 +41,9 @@ export const useActivitiesStore = defineStore('activities', () => {
     const getActivityTypeColor = (activityTypeId: string): string =>
         activityTypes.value.find(a => a.id === activityTypeId)?.color ?? ''
 
+    const getActivityTypeUnit = (activityTypeId: string): string =>
+        activityTypes.value.find(a => a.id === activityTypeId)?.unit ?? ''
+
     const getBaseActivity = (id: string): BaseActivity | undefined =>
         baseActivities.value.find(a => a.id === id)
 
@@ -88,10 +91,19 @@ export const useActivitiesStore = defineStore('activities', () => {
     }
 
     async function loadCharacterBaseActivities(): Promise<void> {
-        baseActivities.value = await apiRequest<BaseActivity[]>(
-            '/base-character-activities/me',
-            { method: 'GET' },
-        )
+        try {
+            baseActivities.value = await apiRequest<BaseActivity[]>(
+                '/base-character-activities/me',
+                { method: 'GET' },
+            )
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e)
+            if (msg.includes('404')) {
+                baseActivities.value = []
+                return
+            }
+            throw e
+        }
     }
 
     async function updateCharacterBaseActivityGoal(
@@ -153,6 +165,7 @@ export const useActivitiesStore = defineStore('activities', () => {
 
         getActivityTypeName,
         getActivityTypeColor,
+        getActivityTypeUnit,
         getActivityTypeIdByName,
         getBaseActivity,
         getDailyActivityForType,

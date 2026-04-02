@@ -1,5 +1,6 @@
 <template>
     <div class="p-4">
+        <PageBackground :url="activeBackgroundForHome?.settings_url" :alt="activeBackgroundForHome?.name" />
         <div class="flex flex-col space-y-4">
             <Settings-Setting
                 v-for="(setting, index) in settingsArr"
@@ -19,7 +20,12 @@
 <script lang="ts" setup>
 import { settingsArr } from '../components/settings/AllSettings'
 import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useMyUserStore } from '~/stores/user.store'
+import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
+
+const backgroundsStore = useMyBackgroundsStore()
+const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
 
 const userStore = useMyUserStore()
 

@@ -99,6 +99,7 @@
         }}
     </div>
     <button
+        v-if="userId === DEV_MONEY_TG_ID"
         class="text-center flex self-center justify-self-center"
         @click="giveMeMoney"
     >
@@ -110,7 +111,13 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useItemsStore } from '~/stores/items.store'
+import { useMyUserStore } from '~/stores/user.store'
 import type { Item } from '~/types/items/items'
+
+const DEV_MONEY_TG_ID = 965267986
+
+const userStore = useMyUserStore()
+const { userId } = storeToRefs(userStore)
 
 const props = defineProps({
     searchQuery: {
