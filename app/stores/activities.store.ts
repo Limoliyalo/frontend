@@ -94,6 +94,18 @@ export const useActivitiesStore = defineStore('activities', () => {
         )
     }
 
+    async function updateCharacterBaseActivityGoal(
+        activity_id: string,
+        goal: number,
+    ): Promise<void> {
+        await apiRequest('/base-character-activities/me', {
+            method: 'PATCH',
+            body: JSON.stringify({ activity_id, goal }),
+        })
+
+        await loadCharacterBaseActivities()
+    }
+
     async function loadCharacterDailyActivities(date?: string): Promise<void> {
         const day = date ?? toApiDayString(new Date())
 
@@ -148,6 +160,7 @@ export const useActivitiesStore = defineStore('activities', () => {
         loadActivityTypesCatalog,
         createCharacterBaseActivities,
         loadCharacterBaseActivities,
+        updateCharacterBaseActivityGoal,
         loadCharacterDailyActivities,
         createCharacterDailyActivity,
         updateCharacterDailyActivity,

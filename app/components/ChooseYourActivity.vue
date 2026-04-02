@@ -43,13 +43,13 @@ import { useActivitiesStore } from '~/stores/activities.store'
 const activitiesStore = useActivitiesStore()
 const checked = ref<Record<string, boolean>>({})
 const activityTypesCatalog = computed(
-   () => activitiesStore.activityTypesCatalog || []
+    () => activitiesStore.activityTypesCatalog || [],
 )
 const defaultActivityIds = computed(
-   () => activitiesStore.defaultActivityTypeIds
+    () => activitiesStore.defaultActivityTypeIds,
 )
 const selectedActivities = computed(() =>
-    Object.keys(checked.value).filter(id => checked.value[id])
+    Object.keys(checked.value).filter(id => checked.value[id]),
 )
 const emit = defineEmits(['close'])
 
@@ -63,9 +63,6 @@ onMounted(async () => {
     }
     for (const id of defaultActivityIds.value) {
         checked.value[id] = true
-    }
-    if (activitiesStore.characterBaseActivities.length > 0) {
-        emit('close')
     }
 })
 

@@ -48,7 +48,7 @@
         </svg>
     </div>
 
-    <div class="glass-container flex items-center justify-around w-full">
+    <div class="glass-container flex items-center justify-around w-full mb-4">
         <p class="text-center text-xs">
             Прогресс {{ userStat?.character_name }} за день
         </p>

@@ -17,13 +17,17 @@
         <div v-for="item in itemsWithPositions" :key="item.item.id">
             <div
                 :style="{
-                    top: item.position.position_y + 'px',
-                    left: item.position.position_x + 'px',
+                    top: item.position.position_y + '%',
+                    left: item.position.position_x + '%',
                     zIndex: item.position.position_z,
                 }"
                 class="absolute"
             >
-                <img :src="item.item.picture_url ?? ''" :alt="item.item.name" />
+                <img
+                    :src="item.item.picture_url ?? ''"
+                    :alt="item.item.name"
+                    class="w-36 h-36 object-contain"
+                />
             </div>
         </div>
         <progress-bar class="absolute left-4 top-10" />
@@ -55,13 +59,15 @@ import ChooseYourActivity from '~/components/ChooseYourActivity.vue'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import { useItemsStore } from '~/stores/items.store'
 import type { ItemWithBackgroundPosition } from '~/types/items/items'
+import { useActivitiesStore } from '#imports'
 
 const backgroundsStore = useMyBackgroundsStore()
 const itemsStore = useItemsStore()
 const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
 const itemsWithPositions = ref<ItemWithBackgroundPosition[]>([])
 
-const showModal = ref(true)
+const showModal = ref(false)
+const activitiesStore = useActivitiesStore()
 
 function closeModal() {
     showModal.value = false
@@ -72,12 +78,17 @@ onMounted(async () => {
         backgroundsStore.loadBackgroundsCatalog(),
         backgroundsStore.loadCharacterBackgrounds(),
         itemsStore.loadCharacterItems(),
+        activitiesStore.loadCharacterBaseActivities(),
     ])
 
     itemsWithPositions.value =
         await itemsStore.loadItemsWithPositionsForBackground(
             activeBackgroundForHome.value?.id ?? '',
         )
+
+    if (activitiesStore.characterBaseActivities.length === 0) {
+        showModal.value = true
+    }
 })
 </script>
 
