@@ -52,7 +52,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import lofiVideo from '~/assets/LoFi.mp4'
 import ChooseYourActivity from '~/components/ChooseYourActivity.vue'
@@ -64,7 +64,12 @@ import { useActivitiesStore } from '#imports'
 const backgroundsStore = useMyBackgroundsStore()
 const itemsStore = useItemsStore()
 const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
-const itemsWithPositions = ref<ItemWithBackgroundPosition[]>([])
+
+
+const backgroundId = activeBackgroundForHome.value?.id ?? ''
+const itemsWithPositions = ref<ItemWithBackgroundPosition[]>(
+    itemsStore.getCachedItemsWithPositionsForBackground(backgroundId) ?? [],
+)
 
 const showModal = ref(false)
 const activitiesStore = useActivitiesStore()
@@ -73,23 +78,35 @@ function closeModal() {
     showModal.value = false
 }
 
+async function syncItemsForActiveBackground(): Promise<void> {
+    const backgroundId = activeBackgroundForHome.value?.id ?? ''
+    if (!backgroundId) return
+
+    itemsWithPositions.value =
+        await itemsStore.loadItemsWithPositionsForBackground(backgroundId)
+}
+
 onMounted(async () => {
     await Promise.all([
         backgroundsStore.loadBackgroundsCatalog(),
         backgroundsStore.loadCharacterBackgrounds(),
-        itemsStore.loadCharacterItems(),
+        itemsStore.ensureCharacterItemsLoaded(),
         activitiesStore.loadCharacterBaseActivities(),
     ])
 
-    itemsWithPositions.value =
-        await itemsStore.loadItemsWithPositionsForBackground(
-            activeBackgroundForHome.value?.id ?? '',
-        )
+    await syncItemsForActiveBackground()
 
     if (activitiesStore.characterBaseActivities.length === 0) {
         showModal.value = true
     }
 })
+
+watch(
+    () => activeBackgroundForHome.value?.id,
+    async () => {
+        await syncItemsForActiveBackground()
+    },
+)
 </script>
 
 <style>

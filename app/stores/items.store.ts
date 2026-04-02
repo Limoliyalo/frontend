@@ -13,6 +13,7 @@ export const useItemsStore = defineStore('itemsStore', () => {
     const items = ref<Item[]>([])
     const characterItems = ref<CharacterItem[]>([])
     const isLoading = ref(false)
+    const characterItemsLoaded = ref(false)
 
     /** Кэш отфильтрованных позиций по background_id. Сбрасывается при equip/unequip. */
     const itemsWithPositionsCache = ref<
@@ -84,9 +85,15 @@ export const useItemsStore = defineStore('itemsStore', () => {
                 '/character-items/me',
                 { method: 'GET' },
             )
+            characterItemsLoaded.value = true
         } finally {
             isLoading.value = false
         }
+    }
+
+    async function ensureCharacterItemsLoaded(): Promise<void> {
+        if (characterItemsLoaded.value) return
+        await loadCharacterItems()
     }
 
     async function purchaseItem(item_id: string): Promise<void> {
@@ -98,6 +105,7 @@ export const useItemsStore = defineStore('itemsStore', () => {
             },
         )
         characterItems.value.push(newCharacterItem)
+        itemsWithPositionsCache.value = {}
     }
 
     async function equipItem(character_item_id: string): Promise<void> {
@@ -172,7 +180,13 @@ export const useItemsStore = defineStore('itemsStore', () => {
         return filtered
     }
 
-    
+    function getCachedItemsWithPositionsForBackground(
+        background_id: string,
+    ): ItemWithBackgroundPosition[] | undefined {
+        if (!background_id) return undefined
+        return itemsWithPositionsCache.value[background_id]
+    }
+
 
     return {
         items,
@@ -190,11 +204,13 @@ export const useItemsStore = defineStore('itemsStore', () => {
         upsertCharacterItem,
         loadItemsCatalog,
         loadCharacterItems,
+        ensureCharacterItemsLoaded,
         purchaseItem,
         equipItem,
         unequipItem,
         toggleFavoriteItem,
         giveMeMoney,
         loadItemsWithPositionsForBackground,
+        getCachedItemsWithPositionsForBackground,
     }
 })

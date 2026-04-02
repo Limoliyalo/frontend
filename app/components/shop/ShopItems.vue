@@ -34,7 +34,7 @@
                     v-if="shopItem.picture_url"
                     :src="shopItem.picture_url"
                     :alt="shopItem.name"
-                    class="absolute inset-0 w-full h-full object-cover"
+                    class="absolute inset-0 w-full h-full object-contain object-center"
                 />
                 <div
                     v-else

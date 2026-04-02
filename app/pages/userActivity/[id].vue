@@ -10,6 +10,42 @@
             }}
         </h1>
 
+        <!-- Редактирование цели -->
+        <div
+            v-if="currentBaseActivity"
+            class="w-full max-w-lg glass-container p-4 rounded-2xl"
+        >
+            <div class="flex items-center justify-between gap-4">
+                <div class="text-white">
+                    <div class="text-sm opacity-80">Цель</div>
+                    <div class="text-lg font-semibold">
+                        {{ currentBaseActivity.goal }}
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <UInput
+                        type="number"
+                        min="1"
+                        step="1"
+                        size="lg"
+                        class="w-28 text-center"
+                        v-model.number="goalDraft"
+                    />
+                    <UButton
+                        size="lg"
+                        :loading="isSavingGoal"
+                        :disabled="!canSaveGoal"
+                        @click="saveGoal"
+                    >
+                        Сохранить цель
+                    </UButton>
+                </div>
+            </div>
+            <div v-if="goalError" class="text-red-200 text-sm mt-2">
+                {{ goalError }}
+            </div>
+        </div>
+
         <!-- Шкала прогресса -->
         <div class="w-full max-w-lg">
             <UProgress
@@ -59,18 +95,21 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useActivitiesStore, onMounted } from '#imports'
 
 const activitiesStore = useActivitiesStore()
 const route = useRoute()
-const baseActivityID = ref(route.params.id)
-const currentBaseActivity = activitiesStore.getBaseActivity(
-    baseActivityID.value as string
-)!
+const baseActivityID = computed(() => route.params.id as string)
+const currentBaseActivity = computed(() =>
+    activitiesStore.getBaseActivity(baseActivityID.value),
+)
 const progressValue = ref(0)
 const dailyActivityId = ref<string | null>(null)
+const goalDraft = ref<number>(1)
+const isSavingGoal = ref(false)
+const goalError = ref<string | null>(null)
 
 const RU_DAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 
@@ -85,12 +124,33 @@ const chartData = ref<ChartItem[]>([])
 
 const activityColor = computed(() =>
     activitiesStore.getActivityTypeColor(
-        currentBaseActivity?.activity_type_id ?? ''
+        currentBaseActivity.value?.activity_type_id ?? '',
     )
 )
 
+watch(
+    () => currentBaseActivity.value?.goal,
+    goal => {
+        if (typeof goal === 'number') goalDraft.value = goal
+    },
+    { immediate: true },
+)
+
+const canSaveGoal = computed(() => {
+    const base = currentBaseActivity.value
+    if (!base) return false
+    if (!Number.isInteger(goalDraft.value) || goalDraft.value < 1) return false
+    return goalDraft.value !== base.goal
+})
+
 onMounted(async () => {
-    const activityTypeId = currentBaseActivity.activity_type_id
+    await activitiesStore.loadActivityTypesCatalog()
+    await activitiesStore.loadCharacterBaseActivities()
+
+    const base = currentBaseActivity.value
+    if (!base) return
+
+    const activityTypeId = base.activity_type_id
 
     await activitiesStore.loadCharacterDailyActivities()
 
@@ -141,7 +201,7 @@ onMounted(async () => {
 })
 
 const increment = () => {
-    if (progressValue.value < (currentBaseActivity?.goal ?? Infinity)) {
+    if (progressValue.value < (currentBaseActivity.value?.goal ?? Infinity)) {
         progressValue.value++
     }
 }
@@ -149,8 +209,38 @@ const decrement = () => {
     if (progressValue.value > 0) progressValue.value--
 }
 
+const saveGoal = async () => {
+    goalError.value = null
+    const base = currentBaseActivity.value
+    if (!base) return
+
+    if (!Number.isInteger(goalDraft.value) || goalDraft.value < 1) {
+        goalError.value = 'Введите целое число (минимум 1)'
+        return
+    }
+
+    try {
+        isSavingGoal.value = true
+        await activitiesStore.updateCharacterBaseActivityGoal(
+            base.id,
+            goalDraft.value,
+        )
+
+        if (progressValue.value > goalDraft.value) {
+            progressValue.value = goalDraft.value
+        }
+    } catch {
+        goalError.value = 'Не удалось сохранить цель. Попробуйте ещё раз.'
+    } finally {
+        isSavingGoal.value = false
+    }
+}
+
 const applyChanges = async () => {
-    const activityTypeId = currentBaseActivity.activity_type_id
+    const base = currentBaseActivity.value
+    if (!base) return
+
+    const activityTypeId = base.activity_type_id
     const todayDate = `${new Date().toISOString().split('T')[0]}T00:00:00Z`
 
     if (dailyActivityId.value === null) {
@@ -158,14 +248,14 @@ const applyChanges = async () => {
             activity_type_id: activityTypeId,
             date: todayDate,
             value: progressValue.value,
-            goal: currentBaseActivity.goal,
+            goal: base.goal,
             notes: '',
         })
     } else {
         await activitiesStore.updateCharacterDailyActivity({
             activity_id: dailyActivityId.value,
             value: progressValue.value,
-            goal: currentBaseActivity.goal,
+            goal: base.goal,
             notes: '',
         })
     }
