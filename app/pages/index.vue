@@ -6,14 +6,11 @@
             :src="activeBackgroundForHome.picture_url"
             :alt="activeBackgroundForHome.name"
         />
-        <video
+        <img
             v-else
             class="fullscreen-bg"
-            :src="lofiVideo"
-            autoplay
-            loop
-            muted
-        ></video>
+            :src="synthWaveGirlImage"
+        />
         <div v-for="item in itemsWithPositions" :key="item.item.id">
             <div
                 :style="{
@@ -54,7 +51,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import lofiVideo from '~/assets/LoFi.mp4'
+import synthWaveGirlImage from '~/assets/SynthWave_Girl.png'
 import ChooseYourActivity from '~/components/ChooseYourActivity.vue'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import { useItemsStore } from '~/stores/items.store'
@@ -66,7 +63,6 @@ const backgroundsStore = useMyBackgroundsStore()
 const itemsStore = useItemsStore()
 const characterStore = useMyCharacterStore()
 const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
-
 
 const backgroundId = activeBackgroundForHome.value?.id ?? ''
 const itemsWithPositions = ref<ItemWithBackgroundPosition[]>(
