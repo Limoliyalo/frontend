@@ -18,12 +18,7 @@
                             ? 'flat-color-icons:like'
                             : 'hugeicons:favourite'
                     "
-                    :class="
-                        itemsStore.getCharacterItemByItemId(shopItem.id)
-                            ?.is_favorite
-                            ? 'text-red-500'
-                            : 'text-white'
-                    "
+                    class="text-white"
                     @click="itemsStore.toggleFavoriteItem(shopItem.id)"
                 />
             </div>
@@ -38,7 +33,7 @@
                 />
                 <div
                     v-else
-                    class="flex items-center justify-center text-gray-400 text-2xl w-full h-full"
+                    class="flex items-center justify-center text-white text-2xl w-full h-full"
                 >
                     —
                 </div>

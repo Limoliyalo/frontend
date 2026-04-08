@@ -3,9 +3,17 @@
         <span class="text-xs">Тихие часы</span>
         <div class="flex flex-col items-center">
             <span class="text-sm">с</span>
-            <UInput v-model="quietHoursFrom" type="time" class="w-28" />
+            <UInput
+                v-model="quietHoursFrom"
+                type="time"
+                class="w-28 bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
+            />
             <span class="text-sm">по</span>
-            <UInput v-model="quietHoursTo" type="time" class="w-28" />
+            <UInput
+                v-model="quietHoursTo"
+                type="time"
+                class="w-28 bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
+            />
         </div>
     </div>
 </template>

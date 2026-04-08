@@ -9,7 +9,7 @@
         <div class="overflow-y-auto flex-grow rounded-lg">
             <div
                 v-if="activityTypesCatalog.length === 0"
-                class="text-center text-gray-400 p-4"
+                class="text-center text-white p-4"
             >
                 Загрузка активностей...
             </div>

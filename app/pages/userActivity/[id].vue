@@ -28,7 +28,7 @@
                         min="1"
                         step="1"
                         size="lg"
-                        class="w-28 text-center"
+                        class="w-28 text-center bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
                         v-model.number="goalDraft"
                     />
                     <UButton
@@ -41,7 +41,7 @@
                     </UButton>
                 </div>
             </div>
-            <div v-if="goalError" class="text-red-200 text-sm mt-2">
+            <div v-if="goalError" class="text-white text-sm mt-2">
                 {{ goalError }}
             </div>
         </div>
@@ -68,7 +68,7 @@
             <UInput
                 type="number"
                 size="xl"
-                class="w-28 text-center"
+                class="w-28 text-center bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
                 v-model.number="progressValue"
             />
             <UButton

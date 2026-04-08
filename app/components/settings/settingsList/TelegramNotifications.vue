@@ -9,7 +9,7 @@
                 type="number"
                 min="1"
                 step="1"
-                class="flex-1"
+                class="flex-1 bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
                 placeholder="60"
             />
             <UButton
@@ -20,7 +20,7 @@
                 OK
             </UButton>
         </div>
-        <p v-if="error" class="text-xs text-red-400 text-center max-w-xs">
+        <p v-if="error" class="text-xs text-white text-center max-w-xs">
             {{ error }}
         </p>
 

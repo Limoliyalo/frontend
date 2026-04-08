@@ -1,6 +1,6 @@
 <template>
     <div
-        class="w-11 h-11 rounded-full bg-green-400 flex items-center justify-center text-black"
+        class="w-11 h-11 rounded-full bg-green-400 flex items-center justify-center text-white"
     >
         {{ userStat?.level }}
     </div>

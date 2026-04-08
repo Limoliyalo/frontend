@@ -1,6 +1,46 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+:root {
+    --app-background: #111426;
+    --ui-bg: var(--app-background);
+    --ui-bg-muted: var(--app-background);
+    --ui-bg-elevated: var(--app-background);
+    --ui-bg-accented: var(--app-background);
+    --ui-bg-inverted: var(--app-background);
+    --ui-text-dimmed: #fff;
+    --ui-text-muted: #fff;
+    --ui-text-toned: #fff;
+    --ui-text: #fff;
+    --ui-text-highlighted: #fff;
+    --ui-text-inverted: #fff;
+}
+
+.dark {
+    --ui-bg: var(--app-background);
+    --ui-bg-muted: var(--app-background);
+    --ui-bg-elevated: var(--app-background);
+    --ui-bg-accented: var(--app-background);
+    --ui-bg-inverted: var(--app-background);
+    --ui-text-dimmed: #fff;
+    --ui-text-muted: #fff;
+    --ui-text-toned: #fff;
+    --ui-text: #fff;
+    --ui-text-highlighted: #fff;
+    --ui-text-inverted: #fff;
+}
+
+html {
+    color: #fff;
+    background-color: var(--app-background);
+}
+
+body {
+    background-color: var(--app-background);
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
 .fullscreen-bg {
     position: fixed;
     top: 0;

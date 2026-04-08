@@ -14,7 +14,7 @@
                         v-model="characterName"
                         type="text"
                         required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-3 py-2 rounded-md bg-black/20 text-white border border-white/30 placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/40"
                         placeholder="Введите имя персонажа"
                     />
                 </div>
@@ -27,7 +27,7 @@
                         id="gender"
                         v-model="gender"
                         required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-3 py-2 rounded-md bg-black/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/40"
                     >
                         <option value="">Выберите пол</option>
                         <option value="male">Мужской</option>

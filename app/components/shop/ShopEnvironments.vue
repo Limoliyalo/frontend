@@ -26,7 +26,7 @@
                         >
                             <Icon
                                 :name="carouselItem.is_favorite ? 'flat-color-icons:like' : 'hugeicons:favourite'"
-                                :class="carouselItem.is_favorite ? 'text-red-500' : 'text-white'"
+                                class="text-white"
                             />
                         </div>
 
@@ -40,7 +40,7 @@
                             />
                             <div
                                 v-else
-                                class="flex items-center justify-center text-gray-400 text-2xl w-full h-full bg-gray-900/30"
+                                class="flex items-center justify-center text-white text-2xl w-full h-full bg-gray-900/30"
                             >
                                 —
                             </div>
