@@ -1,6 +1,12 @@
 <template>
     <div class="p-4">
-        <PageBackground :url="activeBackgroundForHome?.settings_url" :alt="activeBackgroundForHome?.name" />
+        <PageBackground
+            :url="activeBackgroundForHome?.settings_url"
+            :alt="activeBackgroundForHome?.name"
+        />
+        <p class="text-center text-white text-2xl font-bold pt-[0.5%] mb-2">
+            Настройки
+        </p>
         <div class="flex flex-col space-y-4">
             <Settings-Setting
                 v-for="(setting, index) in settingsArr"

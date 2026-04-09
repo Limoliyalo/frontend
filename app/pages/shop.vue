@@ -1,7 +1,10 @@
 <template>
     <div class="flex flex-col gap-1.5 mt-4 mx-4">
-        <PageBackground :url="activeBackgroundForHome?.shop_url" :alt="activeBackgroundForHome?.name" />
-        <div class="flex gap-1.5 items-center justify-start">
+        <PageBackground
+            :url="activeBackgroundForHome?.shop_url"
+            :alt="activeBackgroundForHome?.name"
+        />
+        <div class="flex gap-1.5 items-center justify-start pl-11">
             <ShopSearch @search="handleSearch" />
             <ShopFavourite @click="isFavourite = !isFavourite" />
         </div>

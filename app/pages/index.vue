@@ -6,11 +6,7 @@
             :src="activeBackgroundForHome.picture_url"
             :alt="activeBackgroundForHome.name"
         />
-        <img
-            v-else
-            class="fullscreen-bg"
-            :src="synthWaveGirlImage"
-        />
+        <img v-else class="fullscreen-bg" :src="synthWaveGirlImage" />
         <div v-for="item in itemsWithPositions" :key="item.item.id">
             <div
                 :style="{

@@ -1,6 +1,12 @@
 <template>
     <div class="p-4">
-        <PageBackground :url="activeBackgroundForHome?.profile_url" :alt="activeBackgroundForHome?.name" />
+        <PageBackground
+            :url="activeBackgroundForHome?.profile_url"
+            :alt="activeBackgroundForHome?.name"
+        />
+        <p class="text-center text-white text-2xl font-bold pt-[0.5%] mb-2">
+            Профиль персонажа
+        </p>
         <UserinfoUserDayProgress
             :segments="[
                 { progress: foodPercentage, color: foodColor },
@@ -37,21 +43,19 @@ const exerciseId = computed(() =>
 )
 
 const foodColor = computed(() =>
-   foodId.value
-       ? activityStore.getActivityTypeColor(foodId.value)
-       : '#3b82f6',
+    foodId.value ? activityStore.getActivityTypeColor(foodId.value) : '#3b82f6',
 )
 
 const waterColor = computed(() =>
-   waterId.value
-       ? activityStore.getActivityTypeColor(waterId.value)
-       : '#10b981',
+    waterId.value
+        ? activityStore.getActivityTypeColor(waterId.value)
+        : '#10b981',
 )
 
 const exerciseColor = computed(() =>
-   exerciseId.value
-       ? activityStore.getActivityTypeColor(exerciseId.value)
-       : '#f59e0b',
+    exerciseId.value
+        ? activityStore.getActivityTypeColor(exerciseId.value)
+        : '#f59e0b',
 )
 
 const foodPercentage = computed(() => {
