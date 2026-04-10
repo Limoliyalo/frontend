@@ -4,7 +4,7 @@
             :url="activeBackgroundForHome?.shop_url"
             :alt="activeBackgroundForHome?.name"
         />
-        <div class="flex gap-1.5 items-center justify-start pl-11">
+        <div class="flex gap-1.5 items-center justify-start">
             <ShopSearch @search="handleSearch" />
             <ShopFavourite @click="isFavourite = !isFavourite" />
         </div>
@@ -31,6 +31,8 @@
 </template>
 
 <script lang="ts" setup>
+definePageMeta({ layout: 'inner-page', pageTitle: 'Магазин' })
+
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMyUserStore } from '~/stores/user.store'

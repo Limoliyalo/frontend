@@ -1,11 +1,5 @@
 <template>
-    <div
-        v-if="showReturnBtn"
-        class="fixed top-4 left-4 z-[10001]"
-    >
-        <ReturnBtn />
-    </div>
-    <div class="glass-container fixed left-0 w-full bottom-4 z-10000">
+    <div class="glass-container fixed bottom-4 left-0 right-0 mx-4 z-10000">
         <navbar />
     </div>
     <div class="min-h-screen pb-[88px]">
@@ -13,15 +7,7 @@
     </div>
 </template>
 
-<script lang="ts" setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import ReturnBtn from '~/components/ui/ReturnBtn.vue'
-
-const route = useRoute()
-
-const showReturnBtn = computed(() => route.path !== '/')
-</script>
+<script lang="ts" setup></script>
 
 <style>
 .glass-container {

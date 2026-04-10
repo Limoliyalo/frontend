@@ -4,9 +4,6 @@
             :url="activeBackgroundForHome?.friends_url"
             :alt="activeBackgroundForHome?.name"
         />
-        <p class="text-center text-white text-2xl font-bold pt-[0.5%] mb-2">
-            Друзья
-        </p>
         <div class="glass-container">
             <div
                 v-for="friend in friendArr"
@@ -91,6 +88,8 @@
 </template>
 
 <script lang="ts" setup>
+definePageMeta({ layout: 'inner-page', pageTitle: 'Друзья' })
+
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUserFriendsStore } from '#imports'
