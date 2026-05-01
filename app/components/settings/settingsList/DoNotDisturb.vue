@@ -15,10 +15,8 @@ const userStore = useMyUserStore()
 const doNotDisturb = computed({
     get: () => userStore.settings?.do_not_disturb ?? false,
     set: async (val: boolean) => {
-        // реактивно обновляем локально
         if (userStore.settings) userStore.settings.do_not_disturb = val
 
-        // отправляем PATCH
         await userStore.updateUserSettings({ do_not_disturb: val })
     },
 })

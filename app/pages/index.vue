@@ -37,9 +37,15 @@
         <Register />
         <div
             v-if="showModal"
-            class="fixed inset-0 flex items-center justify-center z-10"
+            class="fixed inset-0 z-10 flex items-center justify-center p-4"
         >
-            <ChooseYourActivity @close="closeModal" />
+            <div
+                class="absolute inset-0 bg-black/40 backdrop-blur-md"
+                aria-hidden="true"
+            />
+            <div class="relative z-10">
+                <ChooseYourActivity @close="closeModal" />
+            </div>
         </div>
     </div>
 </template>

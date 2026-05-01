@@ -3,89 +3,97 @@
         <div
             class="container mx-auto mb-2 flex flex-col items-center gap-8 p-4"
         >
-            <h2
-                v-if="currentBaseActivity"
-                class="text-center text-xl font-bold text-white"
-            >
-                {{
-                    activitiesStore.getActivityTypeName(
-                        currentBaseActivity.activity_type_id,
-                    )
-                }}
-            </h2>
-
-            <!-- Редактирование цели -->
+            <!-- Цель, прогресс, управление и сохранение — один контейнер -->
             <div
                 v-if="currentBaseActivity"
-                class="w-full max-w-lg glass-container p-4 rounded-2xl"
+                class="w-full max-w-lg glass-container flex flex-col gap-6 rounded-2xl p-4"
             >
-                <div class="flex items-center justify-between gap-4">
-                    <div class="text-white">
-                        <div class="text-sm opacity-80">Цель</div>
-                        <div class="text-lg font-semibold">
-                            {{ currentBaseActivity.goal }}
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <UInput
-                            type="number"
-                            min="1"
-                            step="1"
-                            size="lg"
-                            class="w-28 text-center bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
-                            v-model.number="goalDraft"
-                        />
-                        <UButton
-                            size="lg"
-                            :loading="isSavingGoal"
-                            :disabled="!canSaveGoal"
-                            @click="saveGoal"
+                <h2 class="text-center text-xl font-bold text-white">
+                    {{
+                        activitiesStore.getActivityTypeName(
+                            currentBaseActivity.activity_type_id,
+                        )
+                    }}
+                </h2>
+
+                <!-- Шкала прогресса и редактирование цели в строке под баром -->
+                <div>
+                    <UProgress
+                        v-model="progressValue"
+                        :max="effectiveGoalMax"
+                        size="2xl"
+                        color="success"
+                        class="w-full"
+                    />
+                    <div
+                        class="mt-4 flex flex-wrap items-center justify-center gap-x-0 gap-y-2 text-white"
+                    >
+                        <span
+                            class="inline-flex min-h-10 items-center text-lg font-medium tabular-nums leading-none"
                         >
-                            Сохранить цель
-                        </UButton>
+                            {{ progressValue }}/
+                        </span>
+                        <button
+                            v-if="!goalEditing"
+                            type="button"
+                            class="inline-flex min-h-10 cursor-text items-center border-0 bg-transparent p-0 text-lg font-medium tabular-nums leading-none text-white hover:opacity-90 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40"
+                            @click="startGoalEdit"
+                        >
+                            {{ goalDraft }}
+                        </button>
+                        <input
+                            v-else
+                            ref="goalInputRef"
+                            v-model="goalDraftEdit"
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            class="inline-block min-h-10 min-w-[3ch] max-w-[12ch] border-0 bg-transparent p-0 text-lg font-medium tabular-nums leading-none text-white outline-none ring-0 focus:ring-0"
+                            :style="{ width: `${Math.max(goalDraftEdit.length || 1, 2)}ch` }"
+                            @blur="commitGoalEdit"
+                            @keydown.enter.prevent="commitGoalEdit"
+                        />
+                    </div>
+                    <div
+                        v-if="goalError"
+                        class="mt-3 text-center text-sm text-white"
+                    >
+                        {{ goalError }}
                     </div>
                 </div>
-                <div v-if="goalError" class="text-white text-sm mt-2">
-                    {{ goalError }}
+
+                <!-- Управление прогрессом -->
+                <div class="flex items-center justify-center gap-4">
+                    <UButton
+                        icon="i-heroicons-minus-solid"
+                        size="xl"
+                        class="rounded-full"
+                        @click="decrement"
+                    />
+                    <UInput
+                        type="number"
+                        size="xl"
+                        class="w-28 rounded-md border border-white/30 bg-black/20 text-center text-white placeholder:text-white/50"
+                        v-model.number="progressValue"
+                    />
+                    <UButton
+                        icon="i-heroicons-plus-solid"
+                        size="xl"
+                        class="rounded-full"
+                        @click="increment"
+                    />
                 </div>
-            </div>
 
-            <!-- Шкала прогресса -->
-            <div class="w-full max-w-lg">
-                <UProgress
-                    v-model="progressValue"
-                    :max="currentBaseActivity?.goal"
-                />
-                <div class="text-center text-white mt-2">
-                    {{ progressValue }}/{{ currentBaseActivity?.goal }}
+                <div class="flex justify-center">
+                    <UButton
+                        size="xl"
+                        :loading="isSaving"
+                        :disabled="!canSubmitChanges"
+                        @click="saveAllChanges"
+                    >
+                        Сохранить изменения
+                    </UButton>
                 </div>
-            </div>
-
-            <!-- Управление прогрессом -->
-            <div class="flex items-center gap-4">
-                <UButton
-                    icon="i-heroicons-minus-solid"
-                    size="xl"
-                    class="rounded-full"
-                    @click="decrement"
-                />
-                <UInput
-                    type="number"
-                    size="xl"
-                    class="w-28 text-center bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
-                    v-model.number="progressValue"
-                />
-                <UButton
-                    icon="i-heroicons-plus-solid"
-                    size="xl"
-                    class="rounded-full"
-                    @click="increment"
-                />
-            </div>
-
-            <!-- Кнопка Применить -->
-            <div>
-                <UButton size="xl" @click="applyChanges">Применить</UButton>
             </div>
 
             <!-- Статистика за неделю -->
@@ -100,7 +108,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useActivitiesStore } from '#imports'
@@ -121,9 +129,14 @@ const currentBaseActivity = computed(() =>
     activitiesStore.getBaseActivity(baseActivityID.value),
 )
 const progressValue = ref(0)
+const savedProgressValue = ref(0)
 const dailyActivityId = ref<string | null>(null)
 const goalDraft = ref<number>(1)
-const isSavingGoal = ref(false)
+const goalEditing = ref(false)
+const goalDraftEdit = ref('')
+const goalInputRef = ref<HTMLInputElement | null>(null)
+const rollbackGoalSnapshot = ref(1)
+const isSaving = ref(false)
 const goalError = ref<string | null>(null)
 
 const RU_DAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
@@ -146,16 +159,69 @@ const activityColor = computed(() =>
 watch(
     () => currentBaseActivity.value?.goal,
     goal => {
+        if (goalEditing.value) return
         if (typeof goal === 'number') goalDraft.value = goal
     },
     { immediate: true },
 )
 
-const canSaveGoal = computed(() => {
+const startGoalEdit = () => {
+    rollbackGoalSnapshot.value = goalDraft.value
+    goalDraftEdit.value = String(goalDraft.value)
+    goalEditing.value = true
+    nextTick(() => {
+        goalInputRef.value?.focus()
+        goalInputRef.value?.select()
+    })
+}
+
+const commitGoalEdit = () => {
+    const raw = goalDraftEdit.value.trim()
+    const parsed = Number.parseInt(raw, 10)
+    const valid =
+        raw !== '' &&
+        Number.isFinite(parsed) &&
+        Number.isInteger(parsed) &&
+        parsed >= 1
+
+    goalDraft.value = valid ? parsed : rollbackGoalSnapshot.value
+    goalEditing.value = false
+}
+
+const goalDraftValid = computed(() => {
     const base = currentBaseActivity.value
     if (!base) return false
-    if (!Number.isInteger(goalDraft.value) || goalDraft.value < 1) return false
+    return Number.isInteger(goalDraft.value) && goalDraft.value >= 1
+})
+
+const hasGoalChange = computed(() => {
+    const base = currentBaseActivity.value
+    if (!base) return false
     return goalDraft.value !== base.goal
+})
+
+const hasProgressChange = computed(
+    () => progressValue.value !== savedProgressValue.value,
+)
+
+const canSubmitChanges = computed(() => {
+    if (!currentBaseActivity.value) return false
+    return (
+        hasProgressChange.value ||
+        (goalDraftValid.value && hasGoalChange.value)
+    )
+})
+
+/** Лимит бара и «+»: черновик цели при валидном вводе, иначе сохранённая цель */
+const effectiveGoalMax = computed(() => {
+    const base = currentBaseActivity.value
+    if (!base) return 1
+    if (goalDraftValid.value) return goalDraft.value
+    return Math.max(1, base.goal)
+})
+
+watch(effectiveGoalMax, max => {
+    if (progressValue.value > max) progressValue.value = max
 })
 
 onMounted(async () => {
@@ -178,9 +244,11 @@ onMounted(async () => {
     if (daily) {
         dailyActivityId.value = daily.id
         progressValue.value = daily.value
+        savedProgressValue.value = daily.value
     } else {
         dailyActivityId.value = null
         progressValue.value = 0
+        savedProgressValue.value = 0
     }
 
     // Fetch last 7 days for the weekly chart
@@ -220,7 +288,7 @@ onMounted(async () => {
 })
 
 const increment = () => {
-    if (progressValue.value < (currentBaseActivity.value?.goal ?? Infinity)) {
+    if (progressValue.value < effectiveGoalMax.value) {
         progressValue.value++
     }
 }
@@ -228,57 +296,76 @@ const decrement = () => {
     if (progressValue.value > 0) progressValue.value--
 }
 
-const saveGoal = async () => {
+const saveAllChanges = async () => {
     goalError.value = null
+
+    if (!canSubmitChanges.value) return
+
     const base = currentBaseActivity.value
     if (!base) return
 
-    if (!Number.isInteger(goalDraft.value) || goalDraft.value < 1) {
-        goalError.value = 'Введите целое число (минимум 1)'
-        return
-    }
+    const needGoal =
+        goalDraftValid.value &&
+        base.goal !== goalDraft.value
 
     try {
-        isSavingGoal.value = true
-        await activitiesStore.updateCharacterBaseActivityGoal(
-            base.id,
-            goalDraft.value,
-        )
+        isSaving.value = true
 
-        if (progressValue.value > goalDraft.value) {
-            progressValue.value = goalDraft.value
+        if (needGoal) {
+            await activitiesStore.updateCharacterBaseActivityGoal(
+                base.id,
+                goalDraft.value,
+            )
+            if (progressValue.value > goalDraft.value) {
+                progressValue.value = goalDraft.value
+            }
         }
+
+        const baseAfter = currentBaseActivity.value
+        if (!baseAfter) return
+
+        const progressDirty =
+            progressValue.value !== savedProgressValue.value
+
+        if (progressDirty) {
+            const activityTypeId = baseAfter.activity_type_id
+            const todayDate = `${new Date().toISOString().split('T')[0]}T00:00:00Z`
+
+            if (dailyActivityId.value === null) {
+                await activitiesStore.createCharacterDailyActivity({
+                    activity_type_id: activityTypeId,
+                    date: todayDate,
+                    value: progressValue.value,
+                    goal: baseAfter.goal,
+                    notes: '',
+                })
+                await activitiesStore.loadCharacterDailyActivities()
+                const today =
+                    new Date().toISOString().split('T')[0] || ''
+                const created =
+                    activitiesStore.getDailyActivityForType(
+                        activityTypeId,
+                        today,
+                    )
+                if (created) dailyActivityId.value = created.id
+            } else {
+                await activitiesStore.updateCharacterDailyActivity({
+                    activity_id: dailyActivityId.value,
+                    value: progressValue.value,
+                    goal: baseAfter.goal,
+                    notes: '',
+                })
+            }
+        }
+
+        savedProgressValue.value = progressValue.value
+        alert('Изменения сохранены')
     } catch {
-        goalError.value = 'Не удалось сохранить цель. Попробуйте ещё раз.'
+        goalError.value =
+            'Не удалось сохранить изменения. Попробуйте ещё раз.'
     } finally {
-        isSavingGoal.value = false
+        isSaving.value = false
     }
-}
-
-const applyChanges = async () => {
-    const base = currentBaseActivity.value
-    if (!base) return
-
-    const activityTypeId = base.activity_type_id
-    const todayDate = `${new Date().toISOString().split('T')[0]}T00:00:00Z`
-
-    if (dailyActivityId.value === null) {
-        await activitiesStore.createCharacterDailyActivity({
-            activity_type_id: activityTypeId,
-            date: todayDate,
-            value: progressValue.value,
-            goal: base.goal,
-            notes: '',
-        })
-    } else {
-        await activitiesStore.updateCharacterDailyActivity({
-            activity_id: dailyActivityId.value,
-            value: progressValue.value,
-            goal: base.goal,
-            notes: '',
-        })
-    }
-    alert('Изменения сохранены')
 }
 </script>
 

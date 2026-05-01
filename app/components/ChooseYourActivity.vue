@@ -6,7 +6,7 @@
             Выберите активность
         </h2>
 
-        <div class="overflow-y-auto flex-grow rounded-lg">
+        <div class="min-h-0 flex-1 overflow-y-auto rounded-lg">
             <div
                 v-if="activityTypesCatalog.length === 0"
                 class="text-center text-white p-4"
@@ -31,7 +31,17 @@
                     :disabled="defaultActivityIds.includes(type.id)"
                 />
             </div>
+        </div>
+        <div class="mt-3 flex shrink-0 items-center justify-center gap-3">
             <UButton @click="createBaseActivities">Выбрать</UButton>
+            <UButton
+                v-if="showCloseButton"
+                variant="ghost"
+                color="neutral"
+                @click="closeWithoutSaving"
+            >
+                Закрыть
+            </UButton>
         </div>
     </div>
 </template>
@@ -40,6 +50,12 @@
 import { ref, onMounted, computed } from 'vue'
 import { useActivitiesStore } from '~/stores/activities.store'
 
+withDefaults(
+    defineProps<{
+        showCloseButton?: boolean
+    }>(),
+    { showCloseButton: false },
+)
 const activitiesStore = useActivitiesStore()
 const checked = ref<Record<string, boolean>>({})
 const activityTypesCatalog = computed(
@@ -68,6 +84,10 @@ onMounted(async () => {
 
 function createBaseActivities() {
     activitiesStore.createCharacterBaseActivities(selectedActivities.value)
+    emit('close')
+}
+
+function closeWithoutSaving() {
     emit('close')
 }
 </script>
