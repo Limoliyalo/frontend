@@ -21,7 +21,11 @@
 </template>
 
 <script lang="ts" setup>
-definePageMeta({ layout: 'inner-page', pageTitle: 'Настройки' })
+definePageMeta({
+    layout: 'inner-page',
+    pageTitle: 'Настройки',
+    scrollMainContent: true,
+})
 
 import { settingsArr } from '../components/settings/AllSettings'
 import { onMounted } from 'vue'

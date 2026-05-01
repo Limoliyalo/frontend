@@ -1,7 +1,8 @@
 <template>
+    <div class="flex min-h-0 h-full max-h-full flex-1 flex-col">
     <div
-        class="grid grid-cols-3 gap-x-4 gap-y-6 p-4 h-[336px] overflow-y-auto [@media(max-height:595px)]:h-[260px] [@media(max-height:595px)]:gap-y-4 [@media(max-height:595px)]:p-2"
         v-if="filtredShopItems.length > 0"
+        class="grid min-h-0 flex-1 grid-cols-3 gap-x-4 gap-y-6 overflow-y-auto p-4 [@media(max-height:595px)]:gap-y-4 [@media(max-height:595px)]:p-2"
     >
         <div
             v-for="shopItem in filtredShopItems"
@@ -86,7 +87,10 @@
         </div>
     </div>
 
-    <div v-else class="text-center flex justify-center items-center">
+    <div
+        v-else
+        class="flex min-h-0 flex-1 items-center justify-center text-center"
+    >
         {{
             isFavourite
                 ? 'У вас пока нет понравившихся предметов...'
@@ -95,11 +99,12 @@
     </div>
     <button
         v-if="userId === DEV_MONEY_TG_ID"
-        class="text-center flex self-center justify-self-center"
+        class="mt-2 flex shrink-0 justify-center self-center text-center"
         @click="giveMeMoney"
     >
         Дай денег пж
     </button>
+    </div>
 </template>
 
 <script lang="ts" setup>

@@ -1,105 +1,120 @@
 <template>
-    <div class="p-4 flex flex-col items-center gap-8 container mx-auto">
-        <!-- Название активности -->
-        <h1 v-if="currentBaseActivity" class="text-3xl font-bold text-white">
-            Название Активности
-            {{
-                activitiesStore.getActivityTypeName(
-                    currentBaseActivity?.activity_type_id
-                )
-            }}
-        </h1>
-
-        <!-- Редактирование цели -->
+    <div>
         <div
-            v-if="currentBaseActivity"
-            class="w-full max-w-lg glass-container p-4 rounded-2xl"
+            class="container mx-auto mb-2 flex flex-col items-center gap-8 p-4"
         >
-            <div class="flex items-center justify-between gap-4">
-                <div class="text-white">
-                    <div class="text-sm opacity-80">Цель</div>
-                    <div class="text-lg font-semibold">
-                        {{ currentBaseActivity.goal }}
+            <h2
+                v-if="currentBaseActivity"
+                class="text-center text-xl font-bold text-white"
+            >
+                {{
+                    activitiesStore.getActivityTypeName(
+                        currentBaseActivity.activity_type_id,
+                    )
+                }}
+            </h2>
+
+            <!-- Редактирование цели -->
+            <div
+                v-if="currentBaseActivity"
+                class="w-full max-w-lg glass-container p-4 rounded-2xl"
+            >
+                <div class="flex items-center justify-between gap-4">
+                    <div class="text-white">
+                        <div class="text-sm opacity-80">Цель</div>
+                        <div class="text-lg font-semibold">
+                            {{ currentBaseActivity.goal }}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <UInput
+                            type="number"
+                            min="1"
+                            step="1"
+                            size="lg"
+                            class="w-28 text-center bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
+                            v-model.number="goalDraft"
+                        />
+                        <UButton
+                            size="lg"
+                            :loading="isSavingGoal"
+                            :disabled="!canSaveGoal"
+                            @click="saveGoal"
+                        >
+                            Сохранить цель
+                        </UButton>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <UInput
-                        type="number"
-                        min="1"
-                        step="1"
-                        size="lg"
-                        class="w-28 text-center bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
-                        v-model.number="goalDraft"
-                    />
-                    <UButton
-                        size="lg"
-                        :loading="isSavingGoal"
-                        :disabled="!canSaveGoal"
-                        @click="saveGoal"
-                    >
-                        Сохранить цель
-                    </UButton>
+                <div v-if="goalError" class="text-white text-sm mt-2">
+                    {{ goalError }}
                 </div>
             </div>
-            <div v-if="goalError" class="text-white text-sm mt-2">
-                {{ goalError }}
+
+            <!-- Шкала прогресса -->
+            <div class="w-full max-w-lg">
+                <UProgress
+                    v-model="progressValue"
+                    :max="currentBaseActivity?.goal"
+                />
+                <div class="text-center text-white mt-2">
+                    {{ progressValue }}/{{ currentBaseActivity?.goal }}
+                </div>
             </div>
-        </div>
 
-        <!-- Шкала прогресса -->
-        <div class="w-full max-w-lg">
-            <UProgress
-                v-model="progressValue"
-                :max="currentBaseActivity?.goal"
-            />
-            <div class="text-center text-white mt-2">
-                {{ progressValue }}/{{ currentBaseActivity?.goal }}
+            <!-- Управление прогрессом -->
+            <div class="flex items-center gap-4">
+                <UButton
+                    icon="i-heroicons-minus-solid"
+                    size="xl"
+                    class="rounded-full"
+                    @click="decrement"
+                />
+                <UInput
+                    type="number"
+                    size="xl"
+                    class="w-28 text-center bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
+                    v-model.number="progressValue"
+                />
+                <UButton
+                    icon="i-heroicons-plus-solid"
+                    size="xl"
+                    class="rounded-full"
+                    @click="increment"
+                />
             </div>
-        </div>
 
-        <!-- Управление прогрессом -->
-        <div class="flex items-center gap-4">
-            <UButton
-                icon="i-heroicons-minus-solid"
-                size="xl"
-                class="rounded-full"
-                @click="decrement"
-            />
-            <UInput
-                type="number"
-                size="xl"
-                class="w-28 text-center bg-black/20 text-white border border-white/30 placeholder:text-white/50 rounded-md"
-                v-model.number="progressValue"
-            />
-            <UButton
-                icon="i-heroicons-plus-solid"
-                size="xl"
-                class="rounded-full"
-                @click="increment"
-            />
-        </div>
+            <!-- Кнопка Применить -->
+            <div>
+                <UButton size="xl" @click="applyChanges">Применить</UButton>
+            </div>
 
-        <!-- Кнопка Применить -->
-        <div>
-            <UButton size="xl" @click="applyChanges">Применить</UButton>
-        </div>
-
-        <!-- Статистика за неделю -->
-        <div class="w-full max-w-lg">
-            <UserinfoActivityWeeklyChart
-                :chart-data="chartData"
-                :color="activityColor"
-            />
+            <!-- Статистика за неделю -->
+            <div class="w-full max-w-lg">
+                <UserinfoActivityWeeklyChart
+                    :chart-data="chartData"
+                    :color="activityColor"
+                />
+            </div>
         </div>
     </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useActivitiesStore, onMounted } from '#imports'
+import { storeToRefs } from 'pinia'
+import { useActivitiesStore } from '#imports'
+import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
+
+definePageMeta({
+    layout: 'inner-page',
+    pageTitle: 'Активность',
+    scrollMainContent: true,
+})
 
 const activitiesStore = useActivitiesStore()
+const backgroundsStore = useMyBackgroundsStore()
+const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
 const route = useRoute()
 const baseActivityID = computed(() => route.params.id as string)
 const currentBaseActivity = computed(() =>
@@ -125,7 +140,7 @@ const chartData = ref<ChartItem[]>([])
 const activityColor = computed(() =>
     activitiesStore.getActivityTypeColor(
         currentBaseActivity.value?.activity_type_id ?? '',
-    )
+    ),
 )
 
 watch(
@@ -144,8 +159,11 @@ const canSaveGoal = computed(() => {
 })
 
 onMounted(async () => {
-    await activitiesStore.loadActivityTypesCatalog()
-    await activitiesStore.loadCharacterBaseActivities()
+    await Promise.all([
+        activitiesStore.loadActivityTypesCatalog(),
+        activitiesStore.loadCharacterBaseActivities(),
+        backgroundsStore.ensureBackgroundsLoaded(),
+    ])
 
     const base = currentBaseActivity.value
     if (!base) return
@@ -174,11 +192,11 @@ onMounted(async () => {
     })
 
     const dayStrings = last7Days.map(
-        d => d.toISOString().split('T')[0] + 'T00:00:00.000Z'
+        d => d.toISOString().split('T')[0] + 'T00:00:00.000Z',
     )
 
     const results = await Promise.allSettled(
-        dayStrings.map(day => activitiesStore.fetchDailyActivitiesForDay(day))
+        dayStrings.map(day => activitiesStore.fetchDailyActivitiesForDay(day)),
     )
 
     chartData.value = last7Days.map((d, i) => {
@@ -187,9 +205,10 @@ onMounted(async () => {
         const result = results[i]
         const entries = result?.status === 'fulfilled' ? result.value : []
         const entry = entries.find(a => a.activity_type_id === activityTypeId)
-        const percentage = entry && entry.goal > 0
-            ? Math.min((entry.value / entry.goal) * 100, 100)
-            : 0
+        const percentage =
+            entry && entry.goal > 0
+                ? Math.min((entry.value / entry.goal) * 100, 100)
+                : 0
 
         return {
             date: dateKey,

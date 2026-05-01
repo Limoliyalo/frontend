@@ -10,7 +10,12 @@
             <div class="w-9 shrink-0" />
         </div>
 
-        <div class="flex-1 overflow-y-auto">
+        <div
+            class="flex min-h-0 flex-1 flex-col"
+            :class="
+                scrollMainContent ? 'overflow-y-auto' : 'overflow-y-hidden'
+            "
+        >
             <slot />
         </div>
 
@@ -27,4 +32,7 @@ import ReturnBtn from '~/components/ui/ReturnBtn.vue'
 
 const route = useRoute()
 const pageTitle = computed(() => (route.meta.pageTitle as string) ?? '')
+const scrollMainContent = computed(() =>
+    Boolean(route.meta.scrollMainContent),
+)
 </script>

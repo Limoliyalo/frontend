@@ -1,18 +1,20 @@
 <template>
-    <div class="p-4">
+    <div class="mb-2 flex min-h-0 flex-1 flex-col p-4">
         <PageBackground
             :url="activeBackgroundForHome?.profile_url"
             :alt="activeBackgroundForHome?.name"
         />
-        <UserinfoUserDayProgress
-            :segments="[
-                { progress: foodPercentage, color: foodColor },
-                { progress: waterPercentage, color: waterColor },
-                { progress: exercisePercentage, color: exerciseColor },
-            ]"
-            :background-color="['#a7f3d0', '#bfdbfe', '#fde68a']"
-        />
-        <CharacterBaseActivityList class="mt-5" />
+        <div class="shrink-0">
+            <UserinfoUserDayProgress
+                :segments="[
+                    { progress: foodPercentage, color: foodColor },
+                    { progress: waterPercentage, color: waterColor },
+                    { progress: exercisePercentage, color: exerciseColor },
+                ]"
+                :background-color="['#a7f3d0', '#bfdbfe', '#fde68a']"
+            />
+        </div>
+        <CharacterBaseActivityList class="mt-2 min-h-0 flex-1" />
     </div>
 </template>
 

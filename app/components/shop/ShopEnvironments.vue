@@ -1,5 +1,7 @@
 <template>
-    <div class="p-4 flex items-center justify-center">
+    <div
+        class="flex min-h-0 h-full max-h-full flex-1 flex-col items-center justify-center overflow-y-auto p-4"
+    >
         <div v-if="filteredBackgrounds.length > 0" class="relative flex items-center justify-center">
             <!-- Вертикальный слайдер -->
             <div
@@ -100,7 +102,7 @@
         <!-- Пустое состояние -->
         <div
             v-else
-            class="text-center flex justify-center items-center h-[320px] [@media(max-height:595px)]:h-[240px]"
+            class="flex min-h-[12rem] flex-1 items-center justify-center py-8 text-center [@media(max-height:595px)]:min-h-[10rem]"
         >
             {{
                 isFavourite

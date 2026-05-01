@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col gap-1.5 mt-4 mx-4">
+    <div class="flex min-h-0 flex-1 flex-col gap-1.5 mx-4 mt-4 mb-2">
         <PageBackground
             :url="activeBackgroundForHome?.shop_url"
             :alt="activeBackgroundForHome?.name"
@@ -8,22 +8,34 @@
             <ShopSearch @search="handleSearch" />
             <ShopFavourite @click="isFavourite = !isFavourite" />
         </div>
-        <div class="glass-container overflow-hidden max-h-110 w-full mt-4 p-4">
-            <UTabs :items="tabItems" class="w-full">
-                <template #items>
-                    <ShopItems
-                        :search-query="searchQuery"
-                        :is-favourite="isFavourite"
-                    />
-                </template>
-                <template #environments>
-                    <ShopEnvironments
-                        :search-query="searchQuery"
-                        :is-favourite="isFavourite"
-                    />
-                </template>
-            </UTabs>
-            <div class="flex items-center justify-center">
+        <div
+            class="glass-container mt-4 flex min-h-0 w-full flex-1 flex-col overflow-hidden p-4"
+        >
+            <div class="flex min-h-0 flex-1 flex-col">
+                <UTabs
+                    :items="tabItems"
+                    class="flex h-full min-h-0 w-full flex-1 flex-col"
+                    :ui="{
+                        list: 'shrink-0',
+                        content:
+                            'flex min-h-0 flex-1 flex-col overflow-hidden',
+                    }"
+                >
+                    <template #items>
+                        <ShopItems
+                            :search-query="searchQuery"
+                            :is-favourite="isFavourite"
+                        />
+                    </template>
+                    <template #environments>
+                        <ShopEnvironments
+                            :search-query="searchQuery"
+                            :is-favourite="isFavourite"
+                        />
+                    </template>
+                </UTabs>
+            </div>
+            <div class="flex shrink-0 items-center justify-center pt-2">
                 баланс: {{ userStat?.balance }}
             </div>
         </div>

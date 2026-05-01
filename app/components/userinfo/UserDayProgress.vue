@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center justify-center pb-8">
+    <div class="flex items-center justify-center pb-2">
         <svg :width="size" :height="size" class="ring-chart">
             <!-- Фоновые дуги -->
             <path
@@ -79,7 +79,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    size: 120,
+    size: 90,
     strokeWidth: 10,
     gapAngle: 2,
 })
