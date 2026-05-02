@@ -30,13 +30,6 @@
                 <span>{{ status.is_active ? 'включены' : 'выключены' }}</span>
             </p>
             <p>Интервал: {{ status.interval_minutes }} мин.</p>
-            <p v-if="status.schedule_id">
-                Расписание: {{ status.schedule_id }}
-            </p>
-            <p>
-                Последняя отправка:
-                {{ formattedLastSent }}
-            </p>
         </div>
         <div v-else-if="statusLoading" class="text-xs">Загрузка...</div>
 
@@ -53,7 +46,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useNotificationsStore } from '~/stores/notifications.store'
 
@@ -71,14 +64,6 @@ watch(
     },
     { immediate: true },
 )
-
-const formattedLastSent = computed(() => {
-    const raw = status.value?.last_sent_at
-    if (!raw) return '—'
-    const d = new Date(raw)
-    if (Number.isNaN(d.getTime())) return raw
-    return d.toLocaleString()
-})
 
 function onStart() {
     // UInput type="number" may bind a number; .trim() is only on strings

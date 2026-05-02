@@ -1,5 +1,8 @@
 <template>
-    <div v-if="userStore.settings" class="w-full flex flex-col items-center space-y-3">
+    <div
+        v-if="draft"
+        class="w-full flex flex-col items-center space-y-3"
+    >
         <span class="text-xs">Тихие дни</span>
         <div class="flex items-center space-x-1">
             <UButton
@@ -14,13 +17,14 @@
             </UButton>
         </div>
     </div>
+    <div v-else class="w-full text-xs text-center">Загрузка...</div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
-import { useMyUserStore } from '~/stores/user.store'
+import { ref, computed, inject } from 'vue'
+import { settingsDraftKey } from '~/components/settings/settingsDraftContext'
 
-const userStore = useMyUserStore()
+const { draft } = inject(settingsDraftKey)!
 
 const days = ref([
     { key: 'monday', label: 'Пн' },
@@ -32,14 +36,14 @@ const days = ref([
     { key: 'sunday', label: 'Вс' },
 ])
 
-const selectedDays = computed(() => userStore.settings?.muted_days ?? [])
+const selectedDays = computed(() => draft.value?.muted_days ?? [])
 
 function isDaySelected(dayKey: string) {
     return selectedDays.value.includes(dayKey)
 }
 
-async function toggleDay(dayKey: string) {
-    if (!userStore.settings) return
+function toggleDay(dayKey: string) {
+    if (!draft.value) return
 
     const currentDays = [...selectedDays.value]
     const index = currentDays.indexOf(dayKey)
@@ -50,8 +54,6 @@ async function toggleDay(dayKey: string) {
         currentDays.push(dayKey)
     }
 
-    userStore.settings.muted_days = currentDays
-
-    await userStore.updateUserSettings({ muted_days: currentDays })
+    draft.value.muted_days = currentDays
 }
 </script>
