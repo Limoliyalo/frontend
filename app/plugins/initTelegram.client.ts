@@ -2,8 +2,8 @@
 
 import { useMyUserStore } from '~/stores/user.store'
 
-export default defineNuxtPlugin(async () => {
-    if (process.server) return
+export default defineNuxtPlugin(() => {
+    if (import.meta.server) return
 
     const tg = window.Telegram?.WebApp
     const userStore = useMyUserStore()
@@ -18,17 +18,11 @@ export default defineNuxtPlugin(async () => {
 
         if (user && initData) {
             userStore.setUser(user, initData)
-            try {
-                await userStore.fetchCurrentUser()
-            } catch {
-                await userStore.registerUser()
-            }
         } else {
             // Если Telegram не передал initData — пробуем восстановить из localStorage
             userStore.loadFromStorage()
         }
     } else {
-        console.warn('Telegram WebApp SDK не найден, загружаем из localStorage')
         userStore.loadFromStorage()
     }
 })

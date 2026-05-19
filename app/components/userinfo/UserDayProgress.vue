@@ -56,18 +56,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useMyUserStore } from '~/stores/user.store'
-import type { userStat } from '~/types/user/user'
 import type { RingSegment } from '~/types/uiTypes/uiTypes'
 
-const userStat = ref<userStat | null>(null)
 const userStore = useMyUserStore()
-
-onMounted(async () => {
-    await userStore.loadUserStatistic()
-    userStat.value = userStore.statistic
-})
+const userStat = computed(() => userStore.statistic)
 
 interface Props {
     segments: RingSegment[]

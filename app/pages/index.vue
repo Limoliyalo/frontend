@@ -96,14 +96,7 @@ async function syncItemsForActiveBackground(): Promise<void> {
 }
 
 onMounted(async () => {
-    await Promise.all([
-        backgroundsStore.ensureBackgroundsLoaded(),
-        itemsStore.ensureCharacterItemsLoaded(),
-        activitiesStore.loadCharacterBaseActivities(),
-    ])
-
     await syncItemsForActiveBackground()
-
     maybeShowActivityPicker()
 })
 
@@ -111,7 +104,7 @@ watch(
     () => characterStore.isRegistered,
     async registered => {
         if (!registered) return
-        await activitiesStore.loadCharacterBaseActivities()
+        await activitiesStore.ensureCharacterBaseActivitiesLoaded()
         maybeShowActivityPicker()
     },
 )

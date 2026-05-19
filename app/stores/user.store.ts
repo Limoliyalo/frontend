@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useApi } from '#imports'
+import { isApiStatus, useApi } from '~/composables/useApi'
 import type {
     TelegramUser,
     userStat,
@@ -30,6 +30,11 @@ export const useMyUserStore = defineStore('myUserStore', () => {
     const initData = ref<string | null>(null)
     const statistic = ref<userStat | null>(null)
     const settings = ref<userSettings | null>(null)
+    const statisticLoaded = ref(false)
+    const settingsLoaded = ref(false)
+
+    let statisticPromise: Promise<void> | null = null
+    let settingsPromise: Promise<void> | null = null
 
     const isAuthorized = computed<boolean>(
         () => !!user.value && !!initData.value,
@@ -69,6 +74,10 @@ export const useMyUserStore = defineStore('myUserStore', () => {
     function clear(): void {
         user.value = null
         initData.value = null
+        statistic.value = null
+        settings.value = null
+        statisticLoaded.value = false
+        settingsLoaded.value = false
         localStorage.removeItem(STORAGE_KEYS.user)
         localStorage.removeItem(STORAGE_KEYS.initData)
     }
@@ -84,10 +93,22 @@ export const useMyUserStore = defineStore('myUserStore', () => {
         return apiRequest<baseUser>('/users/me', { method: 'GET' })
     }
 
-    async function loadUserStatistic(): Promise<void> {
-        statistic.value = await apiRequest<userStat>('/users/me/statistics', {
+    async function loadUserStatistic(force = false): Promise<void> {
+        if (statisticLoaded.value && !force) return
+        if (statisticPromise && !force) return statisticPromise
+
+        statisticPromise = apiRequest<userStat>('/users/me/statistics', {
             method: 'GET',
         })
+            .then(data => {
+                statistic.value = data
+                statisticLoaded.value = true
+            })
+            .finally(() => {
+                statisticPromise = null
+            })
+
+        return statisticPromise
     }
 
     async function updateUserSettings(
@@ -97,27 +118,36 @@ export const useMyUserStore = defineStore('myUserStore', () => {
             method: 'PATCH',
             body: JSON.stringify(patch),
         })
+        settingsLoaded.value = true
     }
 
-    async function loadUserSettings(): Promise<void> {
-        try {
-            settings.value = await apiRequest<userSettings>(
-                '/user-settings/me',
-                { method: 'GET' },
-            )
-        } catch (error: unknown) {
-            const is404 =
-                error instanceof Error && error.message.includes('404')
+    async function loadUserSettings(force = false): Promise<void> {
+        if (settingsLoaded.value && !force) return
+        if (settingsPromise && !force) return settingsPromise
 
-            if (!is404) throw error
+        settingsPromise = (async () => {
+            try {
+                settings.value = await apiRequest<userSettings>(
+                    '/user-settings/me',
+                    { method: 'GET' },
+                )
+                settingsLoaded.value = true
+            } catch (error: unknown) {
+                if (!isApiStatus(error, 404)) throw error
 
-            await updateUserSettings(DEFAULT_SETTINGS)
-        }
+                await updateUserSettings(DEFAULT_SETTINGS)
+            }
+        })().finally(() => {
+            settingsPromise = null
+        })
+
+        return settingsPromise
     }
 
     async function deleteUserSettings(): Promise<void> {
         await apiRequest('/user-settings/me', { method: 'DELETE' })
         settings.value = null
+        settingsLoaded.value = false
     }
 
     return {
@@ -125,6 +155,8 @@ export const useMyUserStore = defineStore('myUserStore', () => {
         initData,
         statistic,
         settings,
+        statisticLoaded,
+        settingsLoaded,
 
         isAuthorized,
         userId,
@@ -143,6 +175,8 @@ export const useMyUserStore = defineStore('myUserStore', () => {
         fetchCurrentUser,
         loadUserStatistic,
         loadUserSettings,
+        ensureUserStatisticLoaded: loadUserStatistic,
+        ensureUserSettingsLoaded: loadUserSettings,
         updateUserSettings,
         deleteUserSettings,
     }

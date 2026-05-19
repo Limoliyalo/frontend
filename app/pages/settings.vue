@@ -29,12 +29,6 @@
 </template>
 
 <script lang="ts" setup>
-definePageMeta({
-    layout: 'inner-page',
-    pageTitle: 'Настройки',
-    scrollMainContent: true,
-})
-
 import { settingsArr } from '../components/settings/AllSettings'
 import {
     computed,
@@ -47,6 +41,12 @@ import { useMyUserStore } from '~/stores/user.store'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import type { UserSettingsDraft } from '~/components/settings/settingsDraftContext'
 import { settingsDraftKey } from '~/components/settings/settingsDraftContext'
+
+definePageMeta({
+    layout: 'inner-page',
+    pageTitle: 'Настройки',
+    scrollMainContent: true,
+})
 
 const backgroundsStore = useMyBackgroundsStore()
 const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
@@ -119,13 +119,13 @@ async function saveSettings(): Promise<void> {
 }
 
 onMounted(async () => {
-    await userStore.loadUserSettings()
+    await userStore.ensureUserSettingsLoaded()
     initDraftFromStore()
 })
 
 async function deleteMySettings(): Promise<void> {
     await userStore.deleteUserSettings()
-    await userStore.loadUserSettings()
+    await userStore.loadUserSettings(true)
     initDraftFromStore()
 }
 </script>

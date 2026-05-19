@@ -97,13 +97,6 @@
                 : 'Нет подходящих товаров'
         }}
     </div>
-    <button
-        v-if="userId === DEV_MONEY_TG_ID"
-        class="mt-2 flex shrink-0 justify-center self-center text-center"
-        @click="giveMeMoney"
-    >
-        Дай денег пж
-    </button>
     </div>
 </template>
 
@@ -111,13 +104,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useItemsStore } from '~/stores/items.store'
-import { useMyUserStore } from '~/stores/user.store'
 import type { Item } from '~/types/items/items'
-
-const DEV_MONEY_TG_ID = 965267986
-
-const userStore = useMyUserStore()
-const { userId } = storeToRefs(userStore)
 
 const props = defineProps({
     searchQuery: {
@@ -136,15 +123,13 @@ const itemsStore = useItemsStore()
 const { allItems } = storeToRefs(itemsStore)
 
 const items = computed<Item[]>(() => allItems.value)
-const likedItems = computed<Item[]>(
-   () => itemsStore.favoriteItems
-)
+const likedItems = computed<Item[]>(() => itemsStore.favoriteItems)
 const filtredShopItems = computed(() => {
     const source = props.isFavourite ? likedItems.value : items.value
     const normalizedQuery = props.searchQuery.trim().toLowerCase()
     if (!normalizedQuery) return source
     return source.filter(item =>
-        item.name.toLowerCase().includes(normalizedQuery)
+        item.name.toLowerCase().includes(normalizedQuery),
     )
 })
 
@@ -152,17 +137,13 @@ const buyItem = (itemId: string) => {
     itemsStore.purchaseItem(itemId)
 }
 
-async function giveMeMoney() {
-    await itemsStore.giveMeMoney(30)
-}
-
 async function equip(character_item_id: string | undefined) {
-   if (!character_item_id) return
-   await itemsStore.equipItem(character_item_id)
+    if (!character_item_id) return
+    await itemsStore.equipItem(character_item_id)
 }
 async function unequip(character_item_id: string | undefined) {
-   if (!character_item_id) return
-   await itemsStore.unequipItem(character_item_id)
+    if (!character_item_id) return
+    await itemsStore.unequipItem(character_item_id)
 }
 </script>
 

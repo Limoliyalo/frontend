@@ -110,7 +110,6 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { storeToRefs } from 'pinia'
 import { useActivitiesStore } from '#imports'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 
@@ -122,7 +121,6 @@ definePageMeta({
 
 const activitiesStore = useActivitiesStore()
 const backgroundsStore = useMyBackgroundsStore()
-const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
 const route = useRoute()
 const baseActivityID = computed(() => route.params.id as string)
 const currentBaseActivity = computed(() =>
@@ -226,8 +224,8 @@ watch(effectiveGoalMax, max => {
 
 onMounted(async () => {
     await Promise.all([
-        activitiesStore.loadActivityTypesCatalog(),
-        activitiesStore.loadCharacterBaseActivities(),
+        activitiesStore.ensureActivityTypesCatalogLoaded(),
+        activitiesStore.ensureCharacterBaseActivitiesLoaded(),
         backgroundsStore.ensureBackgroundsLoaded(),
     ])
 
@@ -236,7 +234,7 @@ onMounted(async () => {
 
     const activityTypeId = base.activity_type_id
 
-    await activitiesStore.loadCharacterDailyActivities()
+    await activitiesStore.ensureCharacterDailyActivitiesLoaded()
 
     const today = new Date().toISOString().split('T')[0] || ''
     const daily = activitiesStore.getDailyActivityForType(activityTypeId, today)
@@ -339,7 +337,6 @@ const saveAllChanges = async () => {
                     goal: baseAfter.goal,
                     notes: '',
                 })
-                await activitiesStore.loadCharacterDailyActivities()
                 const today =
                     new Date().toISOString().split('T')[0] || ''
                 const created =
@@ -359,7 +356,6 @@ const saveAllChanges = async () => {
         }
 
         savedProgressValue.value = progressValue.value
-        alert('Изменения сохранены')
     } catch {
         goalError.value =
             'Не удалось сохранить изменения. Попробуйте ещё раз.'

@@ -6,18 +6,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue'
+import { computed } from 'vue'
 import { useMyUserStore } from '~/stores/user.store'
-import type { userStat } from '~/types/user/user'
 
-const userStat = ref<userStat | null>(null)
 const userStore = useMyUserStore()
 const MAX_EXPERIENCE = 100
 
-onMounted(async () => {
-    await userStore.loadUserStatistic()
-    userStat.value = userStore.statistic
-})
 const value = computed(() => {
     const statistic = userStore.statistic
 

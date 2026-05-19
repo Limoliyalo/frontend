@@ -43,13 +43,13 @@
 </template>
 
 <script lang="ts" setup>
-definePageMeta({ layout: 'inner-page', pageTitle: 'Магазин' })
-
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMyUserStore } from '~/stores/user.store'
 import { useItemsStore } from '~/stores/items.store'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
+
+definePageMeta({ layout: 'inner-page', pageTitle: 'Магазин' })
 
 const userStore = useMyUserStore()
 const itemsStore = useItemsStore()
@@ -79,9 +79,9 @@ const handleSearch = (query: string) => {
 
 onMounted(async () => {
     await Promise.all([
-        userStore.loadUserStatistic(),
-        itemsStore.loadItemsCatalog(),
-        itemsStore.loadCharacterItems(),
+        userStore.ensureUserStatisticLoaded(),
+        itemsStore.ensureItemsCatalogLoaded(),
+        itemsStore.ensureCharacterItemsLoaded(),
         backgroundsStore.ensureBackgroundsLoaded(),
     ])
 })

@@ -88,13 +88,13 @@
 </template>
 
 <script lang="ts" setup>
-definePageMeta({ layout: 'inner-page', pageTitle: 'Друзья' })
-
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useUserFriendsStore } from '#imports'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import type { FriendFullInfo } from '~/types/friends/friends'
+
+definePageMeta({ layout: 'inner-page', pageTitle: 'Друзья' })
 
 const backgroundsStore = useMyBackgroundsStore()
 const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
@@ -109,7 +109,7 @@ const friendId = ref('')
 const friendToDelete = ref<number | null>(null)
 
 onMounted(async () => {
-    await friendStore.loadFriends()
+    await friendStore.ensureFriendsLoaded()
     await loadFriendsFullInfo()
 })
 
@@ -150,7 +150,8 @@ async function confirmDeleteFriend() {
     const deleted = await friendStore.deleteFriend(deletedFriendId)
 
     if (deleted) {
-        delete friendInfoMap.value[deletedFriendId]
+        const { [deletedFriendId]: _removed, ...rest } = friendInfoMap.value
+        friendInfoMap.value = rest
         closeDeleteModal()
     }
 }

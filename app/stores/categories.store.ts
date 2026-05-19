@@ -8,29 +8,45 @@ export const useCategoriesStore = defineStore('categoriesStore', () => {
 
     const categories = ref<Category[]>([])
     const isLoading = ref(false)
+    const isLoaded = ref(false)
+    let loadPromise: Promise<void> | null = null
 
     const allCategories = computed<Category[]>(() => categories.value)
+    const categoryById = computed(
+        () => new Map(categories.value.map(category => [category.id, category])),
+    )
 
     const getCategoryById = (id: string): Category | undefined =>
-        categories.value.find(c => c.id === id)
+        categoryById.value.get(id)
 
-    async function loadCategories(): Promise<void> {
+    async function loadCategories(force = false): Promise<void> {
+        if (isLoaded.value && !force) return
+        if (loadPromise && !force) return loadPromise
+
         isLoading.value = true
-        try {
-            categories.value = await apiRequest<Category[]>(
-                '/item-categories/catalog',
-                { method: 'GET' },
-            )
-        } finally {
-            isLoading.value = false
-        }
+        loadPromise = apiRequest<Category[]>('/item-categories/catalog', {
+            method: 'GET',
+        })
+            .then(data => {
+                categories.value = data
+                isLoaded.value = true
+            })
+            .finally(() => {
+                isLoading.value = false
+                loadPromise = null
+            })
+
+        return loadPromise
     }
 
     return {
         categories,
         isLoading,
+        isLoaded,
         allCategories,
+        categoryById,
         getCategoryById,
         loadCategories,
+        ensureCategoriesLoaded: loadCategories,
     }
 })

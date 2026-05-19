@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useApi } from '#imports'
+import { isApiStatus, useApi } from '~/composables/useApi'
 import type {
     ActivityType,
     BaseActivity,
@@ -20,6 +20,14 @@ export const useActivitiesStore = defineStore('activities', () => {
     const activityTypes = ref<ActivityType[]>([])
     const baseActivities = ref<BaseActivity[]>([])
     const dailyActivities = ref<DailyActivity[]>([])
+    const activityTypesLoaded = ref(false)
+    const baseActivitiesLoaded = ref(false)
+    const dailyActivitiesDay = ref<string | null>(null)
+
+    let activityTypesPromise: Promise<void> | null = null
+    let baseActivitiesPromise: Promise<void> | null = null
+    let dailyActivitiesPromise: Promise<void> | null = null
+    let dailyActivitiesPromiseDay: string | null = null
 
     const activityTypesCatalog = computed<ActivityType[]>(
         () => activityTypes.value,
@@ -27,6 +35,27 @@ export const useActivitiesStore = defineStore('activities', () => {
 
     const characterBaseActivities = computed<BaseActivity[]>(
         () => baseActivities.value,
+    )
+    const activityTypeById = computed(
+        () => new Map(activityTypes.value.map(type => [type.id, type])),
+    )
+    const activityTypeIdByName = computed(
+        () =>
+            new Map(
+                activityTypes.value.map(type => [
+                    type.name.trim().toLowerCase(),
+                    type.id,
+                ]),
+            ),
+    )
+    const baseActivityById = computed(
+        () =>
+            new Map(
+                baseActivities.value.map(activity => [
+                    activity.id,
+                    activity,
+                ]),
+            ),
     )
 
     const defaultActivityTypeIds = computed<string[]>(() =>
@@ -36,22 +65,20 @@ export const useActivitiesStore = defineStore('activities', () => {
     )
 
     const getActivityTypeName = (activityTypeId: string): string =>
-        activityTypes.value.find(a => a.id === activityTypeId)?.name ?? ''
+        activityTypeById.value.get(activityTypeId)?.name ?? ''
 
     const getActivityTypeColor = (activityTypeId: string): string =>
-        activityTypes.value.find(a => a.id === activityTypeId)?.color ?? ''
+        activityTypeById.value.get(activityTypeId)?.color ?? ''
 
     const getActivityTypeUnit = (activityTypeId: string): string =>
-        activityTypes.value.find(a => a.id === activityTypeId)?.unit ?? ''
+        activityTypeById.value.get(activityTypeId)?.unit ?? ''
 
     const getBaseActivity = (id: string): BaseActivity | undefined =>
-        baseActivities.value.find(a => a.id === id)
+        baseActivityById.value.get(id)
 
     const getActivityTypeIdByName = (name: string): string | undefined => {
         const normalized = name.trim().toLowerCase()
-        return activityTypes.value.find(
-            t => t.name.trim().toLowerCase() === normalized,
-        )?.id
+        return activityTypeIdByName.value.get(normalized)
     }
 
     const getDailyActivityForType = (
@@ -64,17 +91,25 @@ export const useActivitiesStore = defineStore('activities', () => {
                 d.date.startsWith(date),
         )
 
-    async function loadActivityTypesCatalog(): Promise<void> {
-        if (activityTypes.value.length > 0) return
+    async function loadActivityTypesCatalog(force = false): Promise<void> {
+        if (activityTypesLoaded.value && !force) return
+        if (activityTypesPromise && !force) return activityTypesPromise
 
-        const data = await apiRequest<ActivityType[]>(
+        activityTypesPromise = apiRequest<ActivityType[]>(
             '/activity-types/catalog',
             {
                 method: 'GET',
             },
         )
+            .then(data => {
+                activityTypes.value = data
+                activityTypesLoaded.value = true
+            })
+            .finally(() => {
+                activityTypesPromise = null
+            })
 
-        activityTypes.value = data
+        return activityTypesPromise
     }
 
     async function createCharacterBaseActivities(
@@ -88,22 +123,32 @@ export const useActivitiesStore = defineStore('activities', () => {
                 }),
             ),
         )
+        await loadCharacterBaseActivities(true)
     }
 
-    async function loadCharacterBaseActivities(): Promise<void> {
-        try {
-            baseActivities.value = await apiRequest<BaseActivity[]>(
-                '/base-character-activities/me',
-                { method: 'GET' },
-            )
-        } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : String(e)
-            if (msg.includes('404')) {
+    async function loadCharacterBaseActivities(force = false): Promise<void> {
+        if (baseActivitiesLoaded.value && !force) return
+        if (baseActivitiesPromise && !force) return baseActivitiesPromise
+
+        baseActivitiesPromise = apiRequest<BaseActivity[]>(
+            '/base-character-activities/me',
+            { method: 'GET' },
+        )
+            .then(data => {
+                baseActivities.value = data
+                baseActivitiesLoaded.value = true
+            })
+            .catch((error: unknown) => {
+                if (!isApiStatus(error, 404)) throw error
+
                 baseActivities.value = []
-                return
-            }
-            throw e
-        }
+                baseActivitiesLoaded.value = true
+            })
+            .finally(() => {
+                baseActivitiesPromise = null
+            })
+
+        return baseActivitiesPromise
     }
 
     async function updateCharacterBaseActivityGoal(
@@ -115,16 +160,41 @@ export const useActivitiesStore = defineStore('activities', () => {
             body: JSON.stringify({ activity_id, goal }),
         })
 
-        await loadCharacterBaseActivities()
+        await loadCharacterBaseActivities(true)
     }
 
-    async function loadCharacterDailyActivities(date?: string): Promise<void> {
+    async function loadCharacterDailyActivities(
+        date?: string,
+        force = false,
+    ): Promise<void> {
         const day = date ?? toApiDayString(new Date())
+        if (dailyActivitiesDay.value === day && !force) return
+        if (
+            dailyActivitiesPromise &&
+            dailyActivitiesPromiseDay === day &&
+            !force
+        ) {
+            return dailyActivitiesPromise
+        }
 
-        dailyActivities.value = await apiRequest<DailyActivity[]>(
-            `/daily-activities/me?day=${day}`,
-            { method: 'GET' },
+        dailyActivitiesPromiseDay = day
+        dailyActivitiesPromise = apiRequest<DailyActivity[]>(
+            '/daily-activities/me',
+            {
+                method: 'GET',
+                query: { day },
+            },
         )
+            .then(data => {
+                dailyActivities.value = data
+                dailyActivitiesDay.value = day
+            })
+            .finally(() => {
+                dailyActivitiesPromise = null
+                dailyActivitiesPromiseDay = null
+            })
+
+        return dailyActivitiesPromise
     }
 
     async function createCharacterDailyActivity(
@@ -134,6 +204,7 @@ export const useActivitiesStore = defineStore('activities', () => {
             method: 'POST',
             body: JSON.stringify(dailyActivity),
         })
+        await loadCharacterDailyActivities(undefined, true)
     }
 
     async function updateCharacterDailyActivity(
@@ -143,24 +214,39 @@ export const useActivitiesStore = defineStore('activities', () => {
             method: 'PATCH',
             body: JSON.stringify(dailyActivity),
         })
+
+        const activity = dailyActivities.value.find(
+            item => item.id === dailyActivity.activity_id,
+        )
+        if (activity) {
+            activity.value = dailyActivity.value
+            activity.goal = dailyActivity.goal
+            activity.notes = dailyActivity.notes
+        }
     }
 
     async function fetchDailyActivitiesForDay(
         date: string,
     ): Promise<DailyActivity[]> {
-        return await apiRequest<DailyActivity[]>(
-            `/daily-activities/me?day=${date}`,
-            { method: 'GET' },
-        )
+        return await apiRequest<DailyActivity[]>('/daily-activities/me', {
+            method: 'GET',
+            query: { day: date },
+        })
     }
 
     return {
         activityTypes,
         baseActivities,
         dailyActivities,
+        activityTypesLoaded,
+        baseActivitiesLoaded,
+        dailyActivitiesDay,
 
         activityTypesCatalog,
         characterBaseActivities,
+        activityTypeById,
+        activityTypeIdByName,
+        baseActivityById,
         defaultActivityTypeIds,
 
         getActivityTypeName,
@@ -171,10 +257,13 @@ export const useActivitiesStore = defineStore('activities', () => {
         getDailyActivityForType,
 
         loadActivityTypesCatalog,
+        ensureActivityTypesCatalogLoaded: loadActivityTypesCatalog,
         createCharacterBaseActivities,
         loadCharacterBaseActivities,
+        ensureCharacterBaseActivitiesLoaded: loadCharacterBaseActivities,
         updateCharacterBaseActivityGoal,
         loadCharacterDailyActivities,
+        ensureCharacterDailyActivitiesLoaded: loadCharacterDailyActivities,
         createCharacterDailyActivity,
         updateCharacterDailyActivity,
         fetchDailyActivitiesForDay,

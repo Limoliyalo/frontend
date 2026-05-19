@@ -7,17 +7,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useMyUserStore } from '~/stores/user.store'
-import type { userStat } from '~/types/user/user'
 
-const userStat = ref<userStat | null>(null)
 const userStore = useMyUserStore()
-
-onMounted(async () => {
-    await userStore.loadUserStatistic()
-    userStat.value = userStore.statistic
-})
+const userStat = computed(() => userStore.statistic)
 </script>
 
 <style></style>

@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useActivitiesStore } from '~/stores/activities.store'
 
 withDefaults(
@@ -69,9 +69,7 @@ const selectedActivities = computed(() =>
 )
 const emit = defineEmits(['close'])
 
-onMounted(async () => {
-    await activitiesStore.loadActivityTypesCatalog()
-    await activitiesStore.loadCharacterBaseActivities()
+function syncCheckedActivities(): void {
     for (const type of activityTypesCatalog.value) {
         if (!(type.id in checked.value)) {
             checked.value[type.id] = false
@@ -80,10 +78,12 @@ onMounted(async () => {
     for (const id of defaultActivityIds.value) {
         checked.value[id] = true
     }
-})
+}
 
-function createBaseActivities() {
-    activitiesStore.createCharacterBaseActivities(selectedActivities.value)
+watch(activityTypesCatalog, syncCheckedActivities, { immediate: true })
+
+async function createBaseActivities() {
+    await activitiesStore.createCharacterBaseActivities(selectedActivities.value)
     emit('close')
 }
 

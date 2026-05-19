@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useApi } from '#imports'
+import { useApi } from '~/composables/useApi'
+import { useMyUserStore } from '~/stores/user.store'
 import type {
     Item,
     CharacterItem,
@@ -13,6 +14,7 @@ export const useItemsStore = defineStore('itemsStore', () => {
     const items = ref<Item[]>([])
     const characterItems = ref<CharacterItem[]>([])
     const isLoading = ref(false)
+    const itemsLoaded = ref(false)
     const characterItemsLoaded = ref(false)
 
     /** Кэш отфильтрованных позиций по background_id. Сбрасывается при equip/unequip. */
@@ -20,10 +22,25 @@ export const useItemsStore = defineStore('itemsStore', () => {
         Record<string, ItemWithBackgroundPosition[]>
     >({})
 
+    let itemsPromise: Promise<void> | null = null
+    let characterItemsPromise: Promise<void> | null = null
+    const positionsPromises: Record<
+        string,
+        Promise<ItemWithBackgroundPosition[]> | undefined
+    > = {}
 
     const allItems = computed<Item[]>(() => items.value)
     const allCharacterItems = computed<CharacterItem[]>(
         () => characterItems.value,
+    )
+    const itemById = computed(
+        () => new Map(items.value.map(item => [item.id, item])),
+    )
+    const characterItemById = computed(
+        () => new Map(characterItems.value.map(item => [item.id, item])),
+    )
+    const characterItemByItemId = computed(
+        () => new Map(characterItems.value.map(item => [item.item_id, item])),
     )
 
     const favoriteItems = computed<Item[]>(() => {
@@ -37,21 +54,21 @@ export const useItemsStore = defineStore('itemsStore', () => {
 
     const nonFavoriteItems = computed<Item[]>(() =>
         items.value.filter(item => {
-            const ci = characterItems.value.find(ci => ci.item_id === item.id)
+            const ci = characterItemByItemId.value.get(item.id)
             return !ci?.is_favorite
         }),
     )
 
     const getCharacterItemById = (id: string): CharacterItem | undefined =>
-        characterItems.value.find(ci => ci.id === id)
+        characterItemById.value.get(id)
 
     const getCharacterItemByItemId = (
         itemId: string,
     ): CharacterItem | undefined =>
-        characterItems.value.find(ci => ci.item_id === itemId)
+        characterItemByItemId.value.get(itemId)
 
     const getItemById = (id: string): Item | undefined =>
-        items.value.find(item => item.id === id)
+        itemById.value.get(id)
 
     function upsertCharacterItem(updated: CharacterItem): void {
         const index = characterItems.value.findIndex(
@@ -67,36 +84,64 @@ export const useItemsStore = defineStore('itemsStore', () => {
         }
     }
 
-    async function loadItemsCatalog(): Promise<void> {
-        isLoading.value = true
-        try {
-            items.value = await apiRequest<Item[]>('/items/catalog', {
-                method: 'GET',
-            })
-        } finally {
-            isLoading.value = false
-        }
+    function invalidateItemsWithPositions(): void {
+        itemsWithPositionsCache.value = {}
+        Object.keys(positionsPromises).forEach(key => {
+            positionsPromises[key] = undefined
+        })
     }
 
-    async function loadCharacterItems(): Promise<void> {
+    async function loadItemsCatalog(force = false): Promise<void> {
+        if (itemsLoaded.value && !force) return
+        if (itemsPromise && !force) return itemsPromise
+
         isLoading.value = true
-        try {
-            characterItems.value = await apiRequest<CharacterItem[]>(
-                '/character-items/me',
-                { method: 'GET' },
-            )
-            characterItemsLoaded.value = true
-        } finally {
-            isLoading.value = false
-        }
+        itemsPromise = apiRequest<Item[]>('/items/catalog', {
+            method: 'GET',
+        })
+            .then(data => {
+                items.value = data
+                itemsLoaded.value = true
+            })
+            .finally(() => {
+                isLoading.value = false
+                itemsPromise = null
+            })
+
+        return itemsPromise
+    }
+
+    async function loadCharacterItems(force = false): Promise<void> {
+        if (characterItemsLoaded.value && !force) return
+        if (characterItemsPromise && !force) return characterItemsPromise
+
+        isLoading.value = true
+        characterItemsPromise = apiRequest<CharacterItem[]>(
+            '/character-items/me',
+            { method: 'GET' },
+        )
+            .then(data => {
+                characterItems.value = data
+                characterItemsLoaded.value = true
+            })
+            .finally(() => {
+                isLoading.value = false
+                characterItemsPromise = null
+            })
+
+        return characterItemsPromise
     }
 
     async function ensureCharacterItemsLoaded(): Promise<void> {
-        if (characterItemsLoaded.value) return
         await loadCharacterItems()
     }
 
+    async function ensureItemsCatalogLoaded(): Promise<void> {
+        await loadItemsCatalog()
+    }
+
     async function purchaseItem(item_id: string): Promise<void> {
+        const userStore = useMyUserStore()
         const newCharacterItem = await apiRequest<CharacterItem>(
             '/character-items/me/purchase',
             {
@@ -104,8 +149,9 @@ export const useItemsStore = defineStore('itemsStore', () => {
                 body: JSON.stringify({ item_id }),
             },
         )
-        characterItems.value.push(newCharacterItem)
-        itemsWithPositionsCache.value = {}
+        upsertCharacterItem(newCharacterItem)
+        invalidateItemsWithPositions()
+        await userStore.loadUserStatistic(true)
     }
 
     async function equipItem(character_item_id: string): Promise<void> {
@@ -114,11 +160,9 @@ export const useItemsStore = defineStore('itemsStore', () => {
             body: JSON.stringify({ character_item_id }),
         })
 
-        const item = characterItems.value.find(
-            ci => ci.id === character_item_id,
-        )
+        const item = characterItemById.value.get(character_item_id)
         if (item) item.is_active = true
-        itemsWithPositionsCache.value = {}
+        invalidateItemsWithPositions()
     }
 
     async function unequipItem(character_item_id: string): Promise<void> {
@@ -127,11 +171,9 @@ export const useItemsStore = defineStore('itemsStore', () => {
             body: JSON.stringify({ character_item_id }),
         })
 
-        const item = characterItems.value.find(
-            ci => ci.id === character_item_id,
-        )
+        const item = characterItemById.value.get(character_item_id)
         if (item) item.is_active = false
-        itemsWithPositionsCache.value = {}
+        invalidateItemsWithPositions()
     }
 
     async function toggleFavoriteItem(item_id: string): Promise<void> {
@@ -145,39 +187,38 @@ export const useItemsStore = defineStore('itemsStore', () => {
         upsertCharacterItem(updated)
     }
 
-    // dev-only helper, remove before production
-    async function giveMeMoney(amount: number): Promise<void> {
-        await apiRequest('/users/me/deposit', {
-            method: 'POST',
-            body: JSON.stringify({ amount }),
-        })
-    }
-
     async function loadItemsWithPositionsForBackground(
         background_id: string,
+        force = false,
     ): Promise<ItemWithBackgroundPosition[]> {
         if (!background_id) return []
 
         const cached = itemsWithPositionsCache.value[background_id]
-        if (cached) return cached
+        if (cached && !force) return cached
 
-        const raw = await apiRequest<ItemWithBackgroundPosition[]>(
-            '/item-background-positions/me/items',
-            {
-                method: 'GET',
-                query: { background_id },
-            },
-        )
+        const currentPromise = positionsPromises[background_id]
+        if (currentPromise && !force) return currentPromise
 
-        const filtered = raw.filter(entry => {
-            const ci = characterItems.value.find(
-                c => c.item_id === entry.item.id,
-            )
-            return ci?.is_purchased === true && ci?.is_active === true
+        positionsPromises[background_id] = apiRequest<
+            ItemWithBackgroundPosition[]
+        >('/item-background-positions/me/items', {
+            method: 'GET',
+            query: { background_id },
         })
+            .then(raw => {
+                const filtered = raw.filter(entry => {
+                    const ci = characterItemByItemId.value.get(entry.item.id)
+                    return ci?.is_purchased === true && ci?.is_active === true
+                })
 
-        itemsWithPositionsCache.value[background_id] = filtered
-        return filtered
+                itemsWithPositionsCache.value[background_id] = filtered
+                return filtered
+            })
+            .finally(() => {
+                positionsPromises[background_id] = undefined
+            })
+
+        return positionsPromises[background_id]!
     }
 
     function getCachedItemsWithPositionsForBackground(
@@ -187,14 +228,18 @@ export const useItemsStore = defineStore('itemsStore', () => {
         return itemsWithPositionsCache.value[background_id]
     }
 
-
     return {
         items,
         characterItems,
         isLoading,
+        itemsLoaded,
+        characterItemsLoaded,
 
         allItems,
         allCharacterItems,
+        itemById,
+        characterItemById,
+        characterItemByItemId,
         favoriteItems,
         nonFavoriteItems,
 
@@ -204,13 +249,14 @@ export const useItemsStore = defineStore('itemsStore', () => {
         upsertCharacterItem,
         loadItemsCatalog,
         loadCharacterItems,
+        ensureItemsCatalogLoaded,
         ensureCharacterItemsLoaded,
         purchaseItem,
         equipItem,
         unequipItem,
         toggleFavoriteItem,
-        giveMeMoney,
         loadItemsWithPositionsForBackground,
         getCachedItemsWithPositionsForBackground,
+        invalidateItemsWithPositions,
     }
 })

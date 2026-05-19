@@ -12,6 +12,8 @@
 <script lang="ts" setup>
 import type { NavBtn } from '~/types/uiTypes/uiTypes'
 
+defineOptions({ name: 'AppNavbar' })
+
 const navBtns: NavBtn[] = [
     { linkto: '/', iconName: 'hugeicons:home-01' },
     { linkto: '/shop', iconName: 'hugeicons:shopping-bag-01' },

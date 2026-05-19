@@ -19,14 +19,14 @@
 </template>
 
 <script lang="ts" setup>
-definePageMeta({ layout: 'inner-page', pageTitle: 'Профиль персонажа' })
-
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useActivitiesStore } from '#imports'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import CharacterBaseActivityList from '~/components/userinfo/CharacterBaseActivityList.vue'
 import type { DailyActivity } from '~/types/activities/activities'
+
+definePageMeta({ layout: 'inner-page', pageTitle: 'Профиль персонажа' })
 
 const backgroundsStore = useMyBackgroundsStore()
 const { activeBackgroundForHome } = storeToRefs(backgroundsStore)
@@ -84,8 +84,11 @@ const exercisePercentage = computed(() => {
 })
 
 onMounted(async () => {
-    await activityStore.loadActivityTypesCatalog()
-    await activityStore.loadCharacterDailyActivities()
+    await Promise.all([
+        activityStore.ensureActivityTypesCatalogLoaded(),
+        activityStore.ensureCharacterBaseActivitiesLoaded(),
+        activityStore.ensureCharacterDailyActivitiesLoaded(),
+    ])
     if (foodId.value) {
         foodprogress.value = activityStore.getDailyActivityForType(
             foodId.value,

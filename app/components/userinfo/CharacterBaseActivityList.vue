@@ -61,7 +61,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useActivitiesStore } from '#imports'
 import type { BaseActivity } from '~/types/activities/activities'
 
@@ -86,11 +86,6 @@ function closeModal() {
     showModal.value = false
 }
 
-onMounted(async () => {
-    await activitiesStore.loadActivityTypesCatalog()
-    await activitiesStore.loadCharacterBaseActivities()
-    await activitiesStore.loadCharacterDailyActivities()
-})
 </script>
 
 <style></style>

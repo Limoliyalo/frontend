@@ -23,9 +23,9 @@ export interface BaseActivityCreate {
     goal: number
 }
 
-export interface BaseActivityDelete extends Omit<BaseActivityCreate, 'goal'> {}
+export type BaseActivityDelete = Omit<BaseActivityCreate, 'goal'>
 
-export interface BaseActivityUpdate extends BaseActivityCreate {}
+export type BaseActivityUpdate = BaseActivityCreate
 
 // Daily Activity
 

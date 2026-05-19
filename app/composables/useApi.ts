@@ -1,13 +1,35 @@
 import { useMyUserStore } from '~/stores/user.store'
+import { useRuntimeConfig } from '#imports'
 
-const BASE_URL = 'https://healthity.ru/api/v1'
+type ApiQueryValue = string | number | boolean | null | undefined
+type ApiQuery = Record<string, ApiQueryValue | ApiQueryValue[]>
 
 type ApiRequestOptions = RequestInit & {
-    query?: Record<string, any>
+    query?: ApiQuery
 }
 
+export class ApiError extends Error {
+    status: number
+    url: string
+    body: string | null
+
+    constructor(status: number, url: string, body: string | null) {
+        super(`HTTP error! status: ${status}`)
+        this.name = 'ApiError'
+        this.status = status
+        this.url = url
+        this.body = body
+    }
+}
+
+export const isApiError = (error: unknown): error is ApiError =>
+    error instanceof ApiError
+
+export const isApiStatus = (error: unknown, status: number): boolean =>
+    isApiError(error) && error.status === status
+
 export const useApi = () => {
-    const userStore = useMyUserStore()
+    const runtimeConfig = useRuntimeConfig()
 
     const apiRequest = async <T = unknown>(
         endpoint: string,
@@ -15,36 +37,36 @@ export const useApi = () => {
     ): Promise<T> => {
         const { query, ...fetchOptions } = options
 
+        const userStore = useMyUserStore()
         const initData = userStore.initData
 
         let url = endpoint.startsWith('http')
             ? endpoint
-            : `${BASE_URL}${endpoint}`
+            : `${runtimeConfig.public.apiBase}${endpoint}`
 
         if (query) {
-            const definedQueryParams = Object.entries(query).reduce(
-                (acc, [key, value]) => {
-                    if (value !== null && value !== undefined) {
-                        acc[key] = value
+            const queryParams = new URLSearchParams()
+            Object.entries(query).forEach(([key, value]) => {
+                const values = Array.isArray(value) ? value : [value]
+                values.forEach(entry => {
+                    if (entry !== null && entry !== undefined) {
+                        queryParams.append(key, String(entry))
                     }
-                    return acc
-                },
-                {} as Record<string, any>,
-            )
-
-            const queryParams = new URLSearchParams(
-                definedQueryParams,
-            ).toString()
-            if (queryParams) {
-                url += `?${queryParams}`
-            }
+                })
+            })
+            const queryString = queryParams.toString()
+            if (queryString) url += `?${queryString}`
         }
 
-        const headers = {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            ...(initData && { Authorization: `Bearer ${initData}` }),
-            ...fetchOptions.headers,
+        const headers = new Headers(fetchOptions.headers)
+        if (!headers.has('Content-Type')) {
+            headers.set('Content-Type', 'application/json')
+        }
+        if (!headers.has('Accept')) {
+            headers.set('Accept', 'application/json')
+        }
+        if (initData && !headers.has('Authorization')) {
+            headers.set('Authorization', `Bearer ${initData}`)
         }
 
         const response = await fetch(url, {
@@ -53,7 +75,8 @@ export const useApi = () => {
         })
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
+            const body = await response.text().catch(() => null)
+            throw new ApiError(response.status, url, body)
         }
 
         if (response.status === 204) {

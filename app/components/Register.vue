@@ -37,59 +37,48 @@
 
                 <button
                     type="submit"
+                    :disabled="isSubmitting"
                     class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                    Подтвердить
+                    {{ isSubmitting ? 'Создаем...' : 'Подтвердить' }}
                 </button>
+                <p
+                    v-if="errorMessage"
+                    class="mt-3 text-center text-sm text-white/80"
+                >
+                    {{ errorMessage }}
+                </p>
             </form>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useApi } from '~/composables/useApi'
-import { useMyUserStore } from '~/stores/user.store'
+import { ref } from 'vue'
+import { useAppBootstrapStore } from '~/stores/app-bootstrap.store'
 import { useMyCharacterStore } from '~/stores/character.store'
+
+defineOptions({ name: 'CharacterRegister' })
 
 const characterName = ref('')
 const gender = ref('')
 const characterStore = useMyCharacterStore()
-const userStore = useMyUserStore()
-const { apiRequest } = useApi()
-
-const checkCharacter = async () => {
-    await characterStore.loadMyCharacter()
-}
-
-const registerUser = async () => {
-    try {
-        const response = await apiRequest('/users/register', {
-            method: 'POST',
-            body: JSON.stringify({
-                telegram_id: userStore.userId,
-                password: '1234565',
-            }),
-        })
-        console.log('Registration successful:', response)
-    } catch (error) {
-        console.error('Registration failed:', error)
-        alert('Registration failed')
-    }
-}
+const bootstrapStore = useAppBootstrapStore()
+const isSubmitting = ref(false)
+const errorMessage = ref('')
 
 const handleSubmit = async () => {
+    errorMessage.value = ''
+    isSubmitting.value = true
     try {
         await characterStore.createCharacter(characterName.value, gender.value)
-        alert('Персонаж успешно создан!')
+        await bootstrapStore.retry()
     } catch {
-        alert('Ошибка создания персонажа')
+        errorMessage.value = 'Ошибка создания персонажа'
+    } finally {
+        isSubmitting.value = false
     }
 }
-
-onMounted(() => {
-    checkCharacter()
-})
 </script>
 
 <style scoped>
