@@ -49,7 +49,14 @@ import { useMyUserStore } from '~/stores/user.store'
 import { useItemsStore } from '~/stores/items.store'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 
-definePageMeta({ layout: 'inner-page', pageTitle: 'Магазин' })
+definePageMeta({
+    layout: 'inner-page',
+    pageTitle: 'Магазин',
+    pageHelp: {
+        title: 'Для чего этот экран',
+        body: 'В магазине можно находить, покупать и выбирать предметы или окружения для персонажа. Избранное и поиск помогают быстрее вернуться к понравившимся вариантам.',
+    },
+})
 
 const userStore = useMyUserStore()
 const itemsStore = useItemsStore()

@@ -116,6 +116,10 @@ import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 definePageMeta({
     layout: 'inner-page',
     pageTitle: 'Активность',
+    pageHelp: {
+        title: 'Для чего этот экран',
+        body: 'Здесь обновляется прогресс выбранной активности за сегодня. Можно увеличить или уменьшить значение, изменить дневную цель и сохранить изменения, чтобы статистика оставалась актуальной.',
+    },
     scrollMainContent: true,
 })
 

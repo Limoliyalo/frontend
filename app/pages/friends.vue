@@ -94,7 +94,14 @@ import { useUserFriendsStore } from '#imports'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import type { FriendFullInfo } from '~/types/friends/friends'
 
-definePageMeta({ layout: 'inner-page', pageTitle: 'Друзья' })
+definePageMeta({
+    layout: 'inner-page',
+    pageTitle: 'Друзья',
+    pageHelp: {
+        title: 'Для чего этот экран',
+        body: 'Здесь можно добавлять друзей, смотреть их персонажей и поддерживать друг друга в полезных привычках. Если дружба еще не взаимная, профиль друга появится после ответного добавления.',
+    },
+})
 
 const backgroundsStore = useMyBackgroundsStore()
 const { activeBackgroundForHome } = storeToRefs(backgroundsStore)

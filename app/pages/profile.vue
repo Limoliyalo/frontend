@@ -26,7 +26,14 @@ import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import CharacterBaseActivityList from '~/components/userinfo/CharacterBaseActivityList.vue'
 import type { DailyActivity } from '~/types/activities/activities'
 
-definePageMeta({ layout: 'inner-page', pageTitle: 'Профиль персонажа' })
+definePageMeta({
+    layout: 'inner-page',
+    pageTitle: 'Профиль персонажа',
+    pageHelp: {
+        title: 'Для чего этот экран',
+        body: 'На этой странице видно дневной прогресс по базовым привычкам и список активностей персонажа. Отсюда можно перейти к конкретной активности и обновить цель или результат за день.',
+    },
+})
 
 const backgroundsStore = useMyBackgroundsStore()
 const { activeBackgroundForHome } = storeToRefs(backgroundsStore)

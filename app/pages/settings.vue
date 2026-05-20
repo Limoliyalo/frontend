@@ -45,6 +45,10 @@ import { settingsDraftKey } from '~/components/settings/settingsDraftContext'
 definePageMeta({
     layout: 'inner-page',
     pageTitle: 'Настройки',
+    pageHelp: {
+        title: 'Для чего этот экран',
+        body: 'Здесь находятся настройки напоминаний и тихих часов. Бот поможет не засиживаться слишком долго на рабочем месте и вовремя напомнит встать, размяться или вернуться к полезной привычке.',
+    },
     scrollMainContent: true,
 })
 
