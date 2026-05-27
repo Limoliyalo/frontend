@@ -12,32 +12,51 @@
             class="absolute inset-x-0 bottom-10 z-10 mx-auto flex w-full max-w-[360px] flex-col gap-3 px-6"
         >
             <UProgress :model-value="progress" />
-            <p class="min-h-12 text-center text-sm leading-6 text-white/90">
+            <p :class="messageClasses">
                 {{ message }}
             </p>
             <UButton
-                v-if="showRetry"
+                v-if="showRetry || actionLabel"
                 class="self-center"
                 variant="soft"
                 color="neutral"
-                @click="$emit('retry')"
+                @click="handleButtonClick"
             >
-                Попробовать еще раз
+                {{ showRetry ? 'Попробовать еще раз' : actionLabel }}
             </UButton>
         </div>
     </div>
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
 import loaderImage from '~/assets/Loader.png'
 
-defineProps<{
+const props = defineProps<{
     progress: number
     message: string
     showRetry?: boolean
+    actionLabel?: string
+    messageClass?: string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
     retry: []
+    action: []
 }>()
+
+const messageClasses = computed(
+    () =>
+        props.messageClass ??
+        'min-h-12 text-center text-sm leading-6 text-white/90',
+)
+
+function handleButtonClick(): void {
+    if (props.showRetry) {
+        emit('retry')
+        return
+    }
+
+    emit('action')
+}
 </script>

@@ -7,8 +7,13 @@ export const useUserFriendsStore = defineStore('userFriendsStore', () => {
     const { apiRequest } = useApi()
 
     const friends = ref<Friend[]>([])
+    const friendInfoByTgId = ref<Record<number, FriendFullInfo | undefined>>({})
     const isLoaded = ref(false)
     let loadPromise: Promise<void> | null = null
+    const friendInfoPromises: Record<
+        number,
+        Promise<FriendFullInfo> | undefined
+    > = {}
 
     const allFriends = computed<Friend[]>(() => friends.value)
 
@@ -30,13 +35,21 @@ export const useUserFriendsStore = defineStore('userFriendsStore', () => {
         return loadPromise
     }
 
-    async function addFriend(friend_tg_id: number): Promise<void> {
+    async function addFriend(friend_tg_id: number): Promise<Friend> {
         const newFriend = await apiRequest<Friend>('/user-friends/me', {
             method: 'POST',
             body: JSON.stringify({ friend_tg_id }),
         })
-        friends.value.push(newFriend)
+        const friendIndex = friends.value.findIndex(
+            friend => friend.friend_tg_id === friend_tg_id,
+        )
+        if (friendIndex >= 0) {
+            friends.value[friendIndex] = newFriend
+        } else {
+            friends.value.push(newFriend)
+        }
         isLoaded.value = true
+        return newFriend
     }
 
     async function deleteFriend(friend_tg_id: number): Promise<boolean> {
@@ -47,20 +60,42 @@ export const useUserFriendsStore = defineStore('userFriendsStore', () => {
         friends.value = friends.value.filter(
             f => f.friend_tg_id !== friend_tg_id,
         )
+        const { [friend_tg_id]: _removed, ...rest } = friendInfoByTgId.value
+        friendInfoByTgId.value = rest
         return true
     }
 
     async function loadFriendFullInfo(
         friend_tg_id: number,
+        force = false,
     ): Promise<FriendFullInfo> {
-        return apiRequest<FriendFullInfo>('/user-friends/me/friend', {
-            method: 'GET',
-            query: { friend_tg_id },
-        })
+        const cached = friendInfoByTgId.value[friend_tg_id]
+        if (cached && !force) return cached
+
+        const currentPromise = friendInfoPromises[friend_tg_id]
+        if (currentPromise && !force) return currentPromise
+
+        friendInfoPromises[friend_tg_id] = apiRequest<FriendFullInfo>(
+            '/user-friends/me/friend',
+            {
+                method: 'GET',
+                query: { friend_tg_id },
+            },
+        )
+            .then(data => {
+                friendInfoByTgId.value[friend_tg_id] = data
+                return data
+            })
+            .finally(() => {
+                friendInfoPromises[friend_tg_id] = undefined
+            })
+
+        return friendInfoPromises[friend_tg_id]!
     }
 
     return {
         friends,
+        friendInfoByTgId,
         isLoaded,
         allFriends,
         loadFriends,

@@ -5,10 +5,21 @@
         >
             <navbar />
         </div>
-        <div class="min-h-screen pb-[88px]">
+        <div :class="pageClasses">
             <slot />
         </div>
     </div>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+const pageClasses = computed(() =>
+    route.meta.guestRoom
+        ? 'h-dvh overflow-hidden'
+        : 'min-h-screen pb-[88px]',
+)
+</script>

@@ -1,28 +1,9 @@
 <template>
     <div>
-        <img
-            v-if="activeBackgroundForHome?.picture_url"
-            class="fullscreen-bg"
-            :src="activeBackgroundForHome.picture_url"
-            :alt="activeBackgroundForHome.name"
+        <RoomScene
+            :background="activeBackgroundForHome"
+            :items-with-positions="itemsWithPositions"
         />
-        <img v-else class="fullscreen-bg" :src="synthWaveGirlImage" />
-        <div v-for="item in itemsWithPositions" :key="item.item.id">
-            <div
-                :style="{
-                    top: item.position.position_y + '%',
-                    left: item.position.position_x + '%',
-                    zIndex: item.position.position_z,
-                }"
-                class="absolute"
-            >
-                <img
-                    :src="item.item.picture_url ?? ''"
-                    :alt="item.item.name"
-                    class="w-36 h-36 object-contain"
-                />
-            </div>
-        </div>
         <progress-bar class="absolute left-4 top-10" />
         <div
             class="absolute top-7 right-2 z-10 flex flex-col items-center gap-2"
@@ -60,7 +41,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import synthWaveGirlImage from '~/assets/SynthWave_Girl.png'
 import ChooseYourActivity from '~/components/ChooseYourActivity.vue'
 import OnboardingTutorial from '~/components/OnboardingTutorial.vue'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'

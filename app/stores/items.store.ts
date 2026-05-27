@@ -21,10 +21,17 @@ export const useItemsStore = defineStore('itemsStore', () => {
     const itemsWithPositionsCache = ref<
         Record<string, ItemWithBackgroundPosition[]>
     >({})
+    const rawItemsWithPositionsCache = ref<
+        Record<string, ItemWithBackgroundPosition[]>
+    >({})
 
     let itemsPromise: Promise<void> | null = null
     let characterItemsPromise: Promise<void> | null = null
     const positionsPromises: Record<
+        string,
+        Promise<ItemWithBackgroundPosition[]> | undefined
+    > = {}
+    const rawPositionsPromises: Record<
         string,
         Promise<ItemWithBackgroundPosition[]> | undefined
     > = {}
@@ -86,8 +93,12 @@ export const useItemsStore = defineStore('itemsStore', () => {
 
     function invalidateItemsWithPositions(): void {
         itemsWithPositionsCache.value = {}
+        rawItemsWithPositionsCache.value = {}
         Object.keys(positionsPromises).forEach(key => {
             positionsPromises[key] = undefined
+        })
+        Object.keys(rawPositionsPromises).forEach(key => {
+            rawPositionsPromises[key] = undefined
         })
     }
 
@@ -187,6 +198,35 @@ export const useItemsStore = defineStore('itemsStore', () => {
         upsertCharacterItem(updated)
     }
 
+    async function loadRawItemsWithPositionsForBackground(
+        background_id: string,
+        force = false,
+    ): Promise<ItemWithBackgroundPosition[]> {
+        if (!background_id) return []
+
+        const cached = rawItemsWithPositionsCache.value[background_id]
+        if (cached && !force) return cached
+
+        const currentPromise = rawPositionsPromises[background_id]
+        if (currentPromise && !force) return currentPromise
+
+        rawPositionsPromises[background_id] = apiRequest<
+            ItemWithBackgroundPosition[]
+        >('/item-background-positions/me/items', {
+            method: 'GET',
+            query: { background_id },
+        })
+            .then(data => {
+                rawItemsWithPositionsCache.value[background_id] = data
+                return data
+            })
+            .finally(() => {
+                rawPositionsPromises[background_id] = undefined
+            })
+
+        return rawPositionsPromises[background_id]!
+    }
+
     async function loadItemsWithPositionsForBackground(
         background_id: string,
         force = false,
@@ -199,12 +239,10 @@ export const useItemsStore = defineStore('itemsStore', () => {
         const currentPromise = positionsPromises[background_id]
         if (currentPromise && !force) return currentPromise
 
-        positionsPromises[background_id] = apiRequest<
-            ItemWithBackgroundPosition[]
-        >('/item-background-positions/me/items', {
-            method: 'GET',
-            query: { background_id },
-        })
+        positionsPromises[background_id] = loadRawItemsWithPositionsForBackground(
+            background_id,
+            force,
+        )
             .then(raw => {
                 const filtered = raw.filter(entry => {
                     const ci = characterItemByItemId.value.get(entry.item.id)
@@ -255,6 +293,7 @@ export const useItemsStore = defineStore('itemsStore', () => {
         equipItem,
         unequipItem,
         toggleFavoriteItem,
+        loadRawItemsWithPositionsForBackground,
         loadItemsWithPositionsForBackground,
         getCachedItemsWithPositionsForBackground,
         invalidateItemsWithPositions,
