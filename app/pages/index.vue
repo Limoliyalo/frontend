@@ -36,7 +36,7 @@
         </div>
         <Register />
         <div
-            v-if="showModal"
+            v-if="showOnboarding || showActivityPicker"
             class="fixed inset-0 z-10 flex items-center justify-center p-4"
         >
             <div
@@ -44,7 +44,14 @@
                 aria-hidden="true"
             />
             <div class="relative z-10">
-                <ChooseYourActivity @close="closeModal" />
+                <OnboardingTutorial
+                    v-if="showOnboarding"
+                    @complete="completeOnboarding"
+                />
+                <ChooseYourActivity
+                    v-else-if="showActivityPicker"
+                    @close="closeActivityPicker"
+                />
             </div>
         </div>
     </div>
@@ -55,11 +62,14 @@ import { ref, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import synthWaveGirlImage from '~/assets/SynthWave_Girl.png'
 import ChooseYourActivity from '~/components/ChooseYourActivity.vue'
+import OnboardingTutorial from '~/components/OnboardingTutorial.vue'
 import { useMyBackgroundsStore } from '~/stores/backgrounds.store'
 import { useItemsStore } from '~/stores/items.store'
 import type { ItemWithBackgroundPosition } from '~/types/items/items'
 import { useActivitiesStore } from '#imports'
 import { useMyCharacterStore } from '~/stores/character.store'
+
+const ONBOARDING_STORAGE_PREFIX = 'healthity:onboarding:v1'
 
 const backgroundsStore = useMyBackgroundsStore()
 const itemsStore = useItemsStore()
@@ -71,19 +81,79 @@ const itemsWithPositions = ref<ItemWithBackgroundPosition[]>(
     itemsStore.getCachedItemsWithPositionsForBackground(backgroundId) ?? [],
 )
 
-const showModal = ref(false)
+const showOnboarding = ref(false)
+const showActivityPicker = ref(false)
 const activitiesStore = useActivitiesStore()
 
-function closeModal() {
-    showModal.value = false
+function closeActivityPicker(): void {
+    showActivityPicker.value = false
 }
 
-function maybeShowActivityPicker(): void {
+function getOnboardingStorageKey(): string | null {
+    const character = characterStore.myCharacter
+    if (!character) return null
+
+    return `${ONBOARDING_STORAGE_PREFIX}:${character.user_tg_id}:${character.id}`
+}
+
+function hasCompletedOnboarding(): boolean {
+    if (!import.meta.client) return false
+
+    const storageKey = getOnboardingStorageKey()
+    if (!storageKey) return false
+
+    try {
+        return localStorage.getItem(storageKey) === 'true'
+    } catch {
+        return false
+    }
+}
+
+function markOnboardingComplete(): void {
+    if (!import.meta.client) return
+
+    const storageKey = getOnboardingStorageKey()
+    if (!storageKey) return
+
+    try {
+        localStorage.setItem(storageKey, 'true')
+    } catch {
+        // Storage can be unavailable in restricted WebView modes.
+    }
+}
+
+function needsInitialActivityFlow(): boolean {
+    return (
+        characterStore.isRegistered &&
+        activitiesStore.characterBaseActivities.length === 0
+    )
+}
+
+function maybeShowInitialActivityFlow(): void {
+    if (!needsInitialActivityFlow()) {
+        showOnboarding.value = false
+        showActivityPicker.value = false
+        return
+    }
+
+    if (showOnboarding.value || showActivityPicker.value) return
+
+    if (hasCompletedOnboarding()) {
+        showActivityPicker.value = true
+        return
+    }
+
+    showOnboarding.value = true
+}
+
+function completeOnboarding(): void {
+    markOnboardingComplete()
+    showOnboarding.value = false
     if (
         characterStore.isRegistered &&
         activitiesStore.characterBaseActivities.length === 0
     ) {
-        showModal.value = true
+        showActivityPicker.value = true
     }
 }
 
@@ -97,7 +167,7 @@ async function syncItemsForActiveBackground(): Promise<void> {
 
 onMounted(async () => {
     await syncItemsForActiveBackground()
-    maybeShowActivityPicker()
+    maybeShowInitialActivityFlow()
 })
 
 watch(
@@ -105,7 +175,14 @@ watch(
     async registered => {
         if (!registered) return
         await activitiesStore.ensureCharacterBaseActivitiesLoaded()
-        maybeShowActivityPicker()
+        maybeShowInitialActivityFlow()
+    },
+)
+
+watch(
+    () => activitiesStore.characterBaseActivities.length,
+    () => {
+        maybeShowInitialActivityFlow()
     },
 )
 
